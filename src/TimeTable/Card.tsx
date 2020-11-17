@@ -24,7 +24,8 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 		padding: 0,
 		borderRadius: "8px",
 		border: "solid 1px #FFF",
-		background: "linear-gradient(90deg, rgba(79,0,255,1) 0%, rgba(0,119,255,1) 100%)"
+		background: "linear-gradient(90deg, rgba(79,0,255,1) 0%, rgba(0,119,255,1) 100%)",
+		cursor: "pointer"
 	}
 
 	if (!!isRequiredShadow) {
@@ -55,6 +56,25 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 				setSelectedIndex!(undefined)
 			}}
 		>
+			<div
+				style={{
+					width: "100%",
+					height: "100%",
+					position: "relative",
+					backgroundColor: "#eee"
+				}}
+			>
+				<div
+					style={{
+						position: "absolute",
+						bottom: 0,
+						width: "100%",
+						height: "8px",
+						cursor: "row-resize"
+					}}
+				>
+				</div>
+			</div>
 		</div>
 	)
 }

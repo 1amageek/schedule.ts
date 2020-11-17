@@ -12,6 +12,9 @@ export interface Item {
 }
 
 interface TouchEvent {
+	target?: {
+		initial: Rect
+	}
 	start: Point
 	end: Point
 	translation: Point
@@ -75,7 +78,7 @@ export const Provider = ({
 		if (tableEvent) {
 			const start = Math.min(tableEvent.end.y, tableEvent.start.y)
 			const end = Math.max(tableEvent.end.y, tableEvent.start.y)
-			const height = end - start
+			const height = Math.round((end - start) / step) * step
 			setCurrentItem({
 				frame: {
 					origin: {
@@ -93,8 +96,9 @@ export const Provider = ({
 
 	useLayoutEffect(() => {
 		if (itemEvent && currentItem) {
-			const y = currentItem.frame.origin.y + itemEvent.translation.y
-			const height = currentItem.frame.size.height
+			const initialFrame = itemEvent.target!.initial
+			const y = Math.round((initialFrame.origin.y + itemEvent.translation.y) / step) * step
+			const height = initialFrame.size.height
 			setCurrentItem({
 				index: selectedIndex,
 				frame: {
@@ -151,22 +155,28 @@ export const Provider = ({
 		event.stopPropagation()
 		const bounds = ref.current?.getBoundingClientRect()
 		if (bounds) {
-			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-			setItemEvent({ start: point, end: point, translation: { x: 0, y: 0 } })
 			const target = event.target as HTMLDivElement
 			const targetBounds = target.getBoundingClientRect()
-			setCurrentItem({
-				frame: {
-					origin: {
-						x: 0,
-						y: targetBounds.top - bounds.top
-					},
-					size: {
-						width: 100,
-						height: targetBounds.height
-					}
+			const frame = {
+				origin: {
+					x: 0,
+					y: targetBounds.top - bounds.top
+				},
+				size: {
+					width: 100,
+					height: targetBounds.height
+				}
+			}
+			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+			setItemEvent({
+				start: point,
+				end: point,
+				translation: { x: 0, y: 0 },
+				target: {
+					initial: frame
 				}
 			})
+			setCurrentItem({ frame })
 		}
 	}
 
@@ -181,7 +191,7 @@ export const Provider = ({
 					x: point.x - itemEvent.start.x,
 					y: point.y - itemEvent.start.y
 				}
-				setItemEvent({ start: point, end: point, translation })
+				setItemEvent({ start: itemEvent.start, end: point, translation, target: itemEvent.target })
 			}
 		}
 	}
