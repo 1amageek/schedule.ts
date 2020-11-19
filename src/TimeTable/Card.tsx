@@ -1,9 +1,11 @@
 import React, { useState, useContext, CSSProperties } from "react"
 import { Item, IndexPath, Context } from "./Context"
 
-const Component = ({ item, indexPath, isRequiredShadow }: { item: Item, indexPath: IndexPath, isRequiredShadow?: boolean }) => {
+const Component = ({ item, index, isRequiredShadow }: { item: Item, index: number, isRequiredShadow?: boolean }) => {
 
 	const {
+		step,
+		numberOfItems,
 		onMouseDownOnItem,
 		onMouseMoveOnItem,
 		onMouseUpOnItem,
@@ -15,14 +17,21 @@ const Component = ({ item, indexPath, isRequiredShadow }: { item: Item, indexPat
 		zIndex
 	} = useContext(Context)
 
-	const _zIndex = zIndex + 10 + indexPath.item
+	const _zIndex = zIndex + 10 + index
+
+	const heightOfSection = step * numberOfItems
+	const top = item.start.section * heightOfSection + step * item.start.item
+	const bottom = item.end.section * heightOfSection + step * item.end.item
+	const height = bottom - top
+
+	// console.log(top, height)
 
 	let style: CSSProperties = {
 		position: "absolute",
 		zIndex: _zIndex,
-		top: `${item.frame.origin.y}px`,
+		top: `${top}px`,
 		width: "98%",
-		height: `${item.frame.size.height}px`,
+		height: `${height}px`,
 		margin: 0,
 		padding: 0,
 		borderRadius: "8px",
@@ -38,7 +47,7 @@ const Component = ({ item, indexPath, isRequiredShadow }: { item: Item, indexPat
 		}
 	}
 
-	if (selectedIndex === indexPath.item) {
+	if (selectedIndex === index) {
 		style = {
 			...style,
 			opacity: 0.6
@@ -48,9 +57,9 @@ const Component = ({ item, indexPath, isRequiredShadow }: { item: Item, indexPat
 	return (
 		<div
 			style={style}
-			onMouseDown={(event) => onMouseDownOnItem!(event, indexPath)}
-			onMouseMove={(event) => onMouseMoveOnItem!(event, indexPath)}
-			onMouseUp={(event) => onMouseUpOnItem!(event, indexPath)}
+		// onMouseDown={(event) => onMouseDownOnItem!(event, indexPath)}
+		// onMouseMove={(event) => onMouseMoveOnItem!(event, indexPath)}
+		// onMouseUp={(event) => onMouseUpOnItem!(event, indexPath)}
 		>
 			<div
 				style={{

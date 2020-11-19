@@ -15,7 +15,7 @@ const Component = () => {
 			}}
 		>
 			<TimeTable
-				data={[[]]}
+				data={[]}
 				onCreate={(item, done) => {
 					alert("save?")
 					done(item)

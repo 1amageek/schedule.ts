@@ -2,29 +2,23 @@ import React, { useState, createContext, useLayoutEffect, Dispatch, useMemo, use
 import { useSize, Size, Point, Rect } from "./Geometory"
 
 const STEP = 12
-const NUBMER_OF_STEPS_FOR_SECTION = 4
+const NUBMER_OF_ITEMS = 4
 const NUMBER_OF_SECTIONS = 24
-const NUMBER_OF_ROWS = NUBMER_OF_STEPS_FOR_SECTION * NUMBER_OF_SECTIONS
-const NUMBER_OF_COLUMNS = 7
+const NUMBER_OF_CHAPTERS = 7
 const ZINDEX = 100
 
 export interface Item {
 	section?: number
 	index?: number
-	start: {
-		section: number
-		index: number
-	}
-	end: {
-		section: number
-		index: number
-	}
+	start: IndexPath
+	end: IndexPath
 	frame?: Rect
 }
 
-export type Data = Item[][]
+export type Data = Item[]
 
 export interface IndexPath {
+	chapter: number
 	section: number
 	item: number
 }
@@ -33,7 +27,6 @@ interface TouchEvent {
 	target?: {
 		initial: Rect
 	}
-	section: number
 	start: Point
 	end: Point
 	translation: Point
@@ -42,10 +35,11 @@ interface TouchEvent {
 interface Props {
 	size: Size
 	step: number
-	numberOfStepsForSection: number
+	numberOfChapters: number
 	numberOfSections: number
-	numberOfRows: number
-	numberOfColumns: number
+	numberOfItems: number
+
+
 	onMouseDownOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onMouseMoveOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onMouseUpOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
@@ -71,11 +65,10 @@ export const Context = createContext<Props>({
 	size: { width: 0, height: 0 },
 	step: STEP,
 	zIndex: ZINDEX,
-	numberOfStepsForSection: NUBMER_OF_STEPS_FOR_SECTION,
+	numberOfChapters: NUMBER_OF_CHAPTERS,
 	numberOfSections: NUMBER_OF_SECTIONS,
-	numberOfRows: NUMBER_OF_ROWS,
-	numberOfColumns: NUMBER_OF_COLUMNS,
-	data: [[]]
+	numberOfItems: NUBMER_OF_ITEMS,
+	data: []
 })
 
 export const Provider = ({
@@ -83,20 +76,19 @@ export const Provider = ({
 	onCreate,
 	zIndex = ZINDEX,
 	step = STEP,
-	numberOfStepsForSection = NUBMER_OF_STEPS_FOR_SECTION,
+	numberOfItems = NUBMER_OF_ITEMS,
 	numberOfSections = NUMBER_OF_SECTIONS,
-	numberOfRows = NUMBER_OF_COLUMNS,
-	numberOfColumns = NUMBER_OF_COLUMNS,
+	numberOfChapters = NUMBER_OF_CHAPTERS,
 	children
 }: {
 	initialData: Data,
 	onCreate: (item: Item, done: (item: Item) => void) => void,
 	zIndex?: number,
 	step?: number,
-	numberOfStepsForSection?: number,
+	numberOfItems?: number,
 	numberOfSections?: number,
 	numberOfRows?: number,
-	numberOfColumns?: number,
+	numberOfChapters?: number,
 	children: any
 }) => {
 
@@ -114,19 +106,19 @@ export const Provider = ({
 			const start = Math.min(columnEvent.end.y, columnEvent.start.y)
 			const end = Math.max(columnEvent.end.y, columnEvent.start.y)
 			const height = Math.round((end - start) / step) * step
-			setCurrentItem({
-				section: columnEvent.section,
-				frame: {
-					origin: {
-						x: 0,
-						y: start
-					},
-					size: {
-						width: 100,
-						height
-					}
-				}
-			})
+			// setCurrentItem({
+			// 	section: columnEvent.section,
+			// 	frame: {
+			// 		origin: {
+			// 			x: 0,
+			// 			y: start
+			// 		},
+			// 		size: {
+			// 			width: 100,
+			// 			height
+			// 		}
+			// 	}
+			// })
 		}
 	}, [JSON.stringify(columnEvent)])
 
@@ -135,19 +127,19 @@ export const Provider = ({
 			const initialFrame = itemEvent.target!.initial
 			const y = Math.round((initialFrame.origin.y + itemEvent.translation.y) / step) * step
 			const height = initialFrame.size.height
-			setCurrentItem({
-				index: selectedIndex,
-				frame: {
-					origin: {
-						x: 0,
-						y
-					},
-					size: {
-						width: 100,
-						height
-					}
-				}
-			})
+			// setCurrentItem({
+			// 	index: selectedIndex,
+			// 	frame: {
+			// 		origin: {
+			// 			x: 0,
+			// 			y
+			// 		},
+			// 		size: {
+			// 			width: 100,
+			// 			height
+			// 		}
+			// 	}
+			// })
 		}
 	}, [JSON.stringify(itemEvent)])
 
@@ -156,62 +148,103 @@ export const Provider = ({
 			const initialFrame = itemBottomEdgeEvent.target!.initial
 			const y = initialFrame.origin.y
 			const height = Math.round((initialFrame.size.height + itemBottomEdgeEvent.translation.y) / step) * step
-			setCurrentItem({
-				index: selectedIndex,
-				frame: {
-					origin: {
-						x: 0,
-						y
-					},
-					size: {
-						width: 100,
-						height
-					}
-				}
-			})
+			// setCurrentItem({
+			// 	index: selectedIndex,
+			// 	frame: {
+			// 		origin: {
+			// 			x: 0,
+			// 			y
+			// 		},
+			// 		size: {
+			// 			width: 100,
+			// 			height
+			// 		}
+			// 	}
+			// })
 		}
 	}, [JSON.stringify(itemBottomEdgeEvent)])
 
+	const indexPathForPoint = (point: Point): IndexPath => {
+		const chapter = Math.min(Math.max(Math.floor((point.x / size.width) * numberOfChapters), 0), numberOfChapters - 1)
+		const section = Math.min(Math.max(Math.floor((point.y / size.height) * numberOfSections), 0), numberOfSections - 1)
+		const heightOfSection = step * numberOfItems
+		const item = Math.min(Math.max(Math.floor(((point.y - (section * heightOfSection)) / heightOfSection) * numberOfItems), 0), numberOfItems - 1)
+		// console.log(chapter, section, item)
+		return { chapter, section, item }
+	}
+
 	const onMouseDownOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+		event.stopPropagation()
+		const bounds = ref.current?.getBoundingClientRect()
+		if (bounds) {
+			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+			const indexPath = indexPathForPoint(point)
+			setCurrentItem({
+				start: indexPath,
+				end: {
+					...indexPath,
+					item: indexPath.item + 1
+				}
+			})
+		}
+	}
+
+	const onMouseMoveOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+		event.stopPropagation()
+		if (currentItem) {
+			const bounds = ref.current?.getBoundingClientRect()
+			if (bounds) {
+				const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+				const indexPath = indexPathForPoint(point)
+				setCurrentItem({
+					start: currentItem.start,
+					end: {
+						...indexPath,
+						item: indexPath.item + 1
+					}
+				})
+			}
+		}
+	}
+
+	const onMouseUpOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+		event.stopPropagation()
+		if (currentItem) {
+			// onCreate(currentItem, (item) => {
+			setData([...data, currentItem])
+			setCurrentItem(undefined)
+			// })
+		}
+	}
+
+	const onMouseDownOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, column: number) => {
 		// event.stopPropagation()
 		// const bounds = ref.current?.getBoundingClientRect()
 		// if (bounds) {
 		// 	const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-		// 	setTableEvent({ start: point, end: point, translation: { x: 0, y: 0 } })
+		// 	setColumnEvent({ start: point, end: point, translation: { x: 0, y: 0 } })
 		// }
 	}
 
-	const onMouseMoveOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+	const onMouseMoveOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, column: number) => {
 		// event.stopPropagation()
-		// if (tableEvent) {
+		// if (columnEvent) {
 		// 	const bounds = ref.current?.getBoundingClientRect()
 		// 	if (bounds) {
 		// 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 		// 		const translation = {
-		// 			x: point.x - tableEvent.start.x,
-		// 			y: point.y - tableEvent.start.y
+		// 			x: point.x - columnEvent.start.x,
+		// 			y: point.y - columnEvent.start.y
 		// 		}
-		// 		setTableEvent({ start: tableEvent.start, end: point, translation })
-		// 	}
-		// }
-		// if (itemBottomEdgeEvent) {
-		// 	const bounds = ref.current?.getBoundingClientRect()
-		// 	if (bounds) {
-		// 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-		// 		const translation = {
-		// 			x: point.x - itemBottomEdgeEvent.start.x,
-		// 			y: point.y - itemBottomEdgeEvent.start.y
-		// 		}
-		// 		console.log(translation)
-		// 		setItemBottomEdgeEvent({ start: itemBottomEdgeEvent.start, end: point, translation, target: itemBottomEdgeEvent.target })
+		// 		setColumnEvent({ start: columnEvent.start, end: point, translation })
 		// 	}
 		// }
 	}
 
-	const onMouseUpOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+	const onMouseUpOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, column: number) => {
 		// event.stopPropagation()
-		// if (tableEvent && currentItem) {
-		// 	setTableEvent(undefined)
+		// if (columnEvent && currentItem) {
+		// 	setColumnEvent(undefined)
 		// 	// onCreate(currentItem, (item) => {
 		// 	// setItems([...items, currentItem])
 		// 	setCurrentItem(undefined)
@@ -219,105 +252,69 @@ export const Provider = ({
 		// }
 	}
 
-	const onMouseDownOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, section: number) => {
-		event.stopPropagation()
-		const bounds = ref.current?.getBoundingClientRect()
-		if (bounds) {
-			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-			setColumnEvent({ section, start: point, end: point, translation: { x: 0, y: 0 } })
-		}
-	}
-
-	const onMouseMoveOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, section: number) => {
-		event.stopPropagation()
-		if (columnEvent) {
-			const bounds = ref.current?.getBoundingClientRect()
-			if (bounds) {
-				const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-				const translation = {
-					x: point.x - columnEvent.start.x,
-					y: point.y - columnEvent.start.y
-				}
-				setColumnEvent({ section, start: columnEvent.start, end: point, translation })
-			}
-		}
-	}
-
-	const onMouseUpOnColumn = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, section: number) => {
-		event.stopPropagation()
-		if (columnEvent && currentItem) {
-			setColumnEvent(undefined)
-			// onCreate(currentItem, (item) => {
-			// setItems([...items, currentItem])
-			setCurrentItem(undefined)
-			// })
-		}
-	}
-
 	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, indexPath: IndexPath) => {
-		if (tableEvent) return
-		event.stopPropagation()
-		const bounds = ref.current?.getBoundingClientRect()
-		if (bounds) {
-			const target = event.target as HTMLDivElement
-			const targetBounds = target.getBoundingClientRect()
-			const frame = {
-				origin: {
-					x: 0,
-					y: targetBounds.top - bounds.top
-				},
-				size: {
-					width: 100,
-					height: targetBounds.height
-				}
-			}
-			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-			setItemEvent({
-				section: indexPath.section,
-				start: point,
-				end: point,
-				translation: { x: 0, y: 0 },
-				target: {
-					initial: frame
-				}
-			})
-			setCurrentItem({ frame })
-		}
+		// if (tableEvent) return
+		// event.stopPropagation()
+		// const bounds = ref.current?.getBoundingClientRect()
+		// if (bounds) {
+		// 	const target = event.target as HTMLDivElement
+		// 	const targetBounds = target.getBoundingClientRect()
+		// 	const frame = {
+		// 		origin: {
+		// 			x: 0,
+		// 			y: targetBounds.top - bounds.top
+		// 		},
+		// 		size: {
+		// 			width: 100,
+		// 			height: targetBounds.height
+		// 		}
+		// 	}
+		// 	const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+		// 	setItemEvent({
+		// 		start: point,
+		// 		end: point,
+		// 		translation: { x: 0, y: 0 },
+		// 		target: {
+		// 			initial: frame
+		// 		}
+		// 	})
+		// 	setCurrentItem({ frame })
+		// }
 	}
 
 	const onMouseMoveOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, indexPath: IndexPath) => {
-		if (tableEvent) return
-		event.stopPropagation()
-		if (itemEvent) {
-			const bounds = ref.current?.getBoundingClientRect()
-			if (bounds) {
-				const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
-				const translation = {
-					x: point.x - itemEvent.start.x,
-					y: point.y - itemEvent.start.y
-				}
-				setItemEvent({
-					section: indexPath.section,
-					start: itemEvent.start,
-					end: point, translation,
-					target: itemEvent.target
-				})
-			}
-		}
+		// if (tableEvent) return
+		// event.stopPropagation()
+		// if (itemEvent) {
+		// 	const bounds = ref.current?.getBoundingClientRect()
+		// 	if (bounds) {
+		// 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+		// 		const translation = {
+		// 			x: point.x - itemEvent.start.x,
+		// 			y: point.y - itemEvent.start.y
+		// 		}
+		// 		setItemEvent({
+		// 			section: indexPath.section,
+		// 			start: itemEvent.start,
+		// 			end: point, translation,
+		// 			target: itemEvent.target
+		// 		})
+		// 	}
+		// }
 	}
 
 	const onMouseUpOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, indexPath: IndexPath) => {
-		if (tableEvent) return
-		event.stopPropagation()
-		if (currentItem && itemEvent) {
-			// const currentItems = [...items]
-			// currentItems.splice(currentItem.index!, 1, currentItem)
-			// setItems([
-			// 	...currentItems
-			// ])
-			setItemEvent(undefined)
-			setCurrentItem(undefined)
-		}
+		// if (tableEvent) return
+		// event.stopPropagation()
+		// if (currentItem && itemEvent) {
+		// 	// const currentItems = [...items]
+		// 	// currentItems.splice(currentItem.index!, 1, currentItem)
+		// 	// setItems([
+		// 	// 	...currentItems
+		// 	// ])
+		// 	setItemEvent(undefined)
+		// 	setCurrentItem(undefined)
+		// }
 	}
 
 	// const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -387,10 +384,9 @@ export const Provider = ({
 			zIndex,
 			size,
 			step,
-			numberOfStepsForSection,
+			numberOfItems,
 			numberOfSections,
-			numberOfRows,
-			numberOfColumns,
+			numberOfChapters,
 			onMouseDownOnTable,
 			onMouseMoveOnTable,
 			onMouseUpOnTable,

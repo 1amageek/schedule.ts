@@ -3,21 +3,17 @@ import { Item, IndexPath, Context } from "./Context"
 import Card from "./Card"
 import { useSize } from "./Geometory"
 
-const Component = ({ numberOfSections, numberOfRows, numberOfColumns }: { numberOfSections: number, numberOfRows: number, numberOfColumns: number }) => {
+const Component = () => {
 
 	const {
-		zIndex,
-		step,
-		numberOfStepsForSection,
-		size,
 		data,
-		currentItem,
+		numberOfChapters,
 		onMouseDownOnTable,
 		onMouseMoveOnTable,
 		onMouseUpOnTable
 	} = useContext(Context)
 
-	const columns = [...new Array(numberOfColumns).keys()]
+	const columns = [...new Array(numberOfChapters).keys()]
 
 	return (
 		<div
@@ -34,23 +30,23 @@ const Component = ({ numberOfSections, numberOfRows, numberOfColumns }: { number
 				return <>
 					<Column
 						key={index}
-						section={index}
-						numberOfRows={numberOfRows}
-						items={data[index] ?? []}
+						chapter={index}
+						items={data}
 					/>
-					{numberOfRows - 1 !== index && <Divider direction="vertical" />}
+					{numberOfChapters - 1 !== index && <Divider direction="vertical" />}
 				</>
 			})}
 		</div>
 	)
 }
 
-const Column = ({ section, numberOfRows, items }: { section: number, numberOfRows: number, items: Item[] }) => {
+const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
 
 	const {
 		zIndex,
 		step,
-		numberOfStepsForSection,
+		numberOfSections,
+		numberOfItems,
 		currentItem,
 		onMouseDownOnColumn,
 		onMouseMoveOnColumn,
@@ -59,6 +55,7 @@ const Column = ({ section, numberOfRows, items }: { section: number, numberOfRow
 
 	const [ref, size] = useSize<HTMLDivElement>()
 
+	const numberOfRows = numberOfSections
 	const rows = [...new Array(numberOfRows).keys()]
 
 	return (
@@ -77,30 +74,44 @@ const Column = ({ section, numberOfRows, items }: { section: number, numberOfRow
 				padding: 0,
 				zIndex: zIndex
 			}}
-				onMouseDown={(event) => onMouseDownOnColumn!(event, section)}
-				onMouseMove={(event) => onMouseMoveOnColumn!(event, section)}
-				onMouseUp={(event) => onMouseUpOnColumn!(event, section)}
+			// onMouseDown={(event) => onMouseDownOnColumn!(event, section)}
+			// onMouseMove={(event) => onMouseMoveOnColumn!(event, section)}
+			// onMouseUp={(event) => onMouseUpOnColumn!(event, section)}
 			>
-				{currentItem && currentItem.section === section && <Card indexPath={{ section, item: items.length }} item={currentItem} isRequiredShadow />}
+				{currentItem && currentItem.start.chapter === chapter && <Card index={items.length} item={currentItem} isRequiredShadow />}
 				{
-					items.map((item, index) => {
-						const indexPath = { section, item: index }
-						return <Card key={index} indexPath={indexPath} item={item} />
-					})
+					items
+						.filter(item => item.start.chapter === chapter)
+						.map((item, index) => {
+							return <Card key={index} index={index} item={item} />
+						})
 				}
 			</div>
 			{rows.map(index => {
 				return <>
-					<div
+					<Row
 						key={index}
-						style={{
-							height: `${step * numberOfStepsForSection}px`
-						}}
-					>
-					</div>
+						height={step * numberOfItems}
+					/>
 					{numberOfRows - 1 !== index && <Divider />}
 				</>
 			})}
+		</div>
+	)
+}
+
+const Row = ({ height }: { height: number }) => {
+
+	return (
+		<div
+			style={{
+				height: `${height}px`
+			}}
+		// onMouseDown={(event) => onMouseDownOnBlock!(event, indexPath)}
+		// onMouseMove={(event) => onMouseMoveOnBlock!(event, indexPath)}
+		// onMouseUp={(event) => onMouseUpOnBlock!(event, indexPath)}
+		>
+
 		</div>
 	)
 }
