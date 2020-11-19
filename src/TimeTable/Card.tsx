@@ -1,18 +1,21 @@
 import React, { useState, useContext, CSSProperties } from "react"
-import { Item, Context } from "./Context"
+import { Item, IndexPath, Context } from "./Context"
 
-const Component = ({ item, index, isRequiredShadow }: { item: Item, index: number, isRequiredShadow?: boolean }) => {
+const Component = ({ item, indexPath, isRequiredShadow }: { item: Item, indexPath: IndexPath, isRequiredShadow?: boolean }) => {
 
 	const {
 		onMouseDownOnItem,
 		onMouseMoveOnItem,
 		onMouseUpOnItem,
+		onMouseDownOnItemBottomEdge,
+		onMouseMoveOnItemBottomEdge,
+		onMouseUpOnItemBottomEdge,
 		setSelectedIndex,
 		selectedIndex,
 		zIndex
 	} = useContext(Context)
 
-	const _zIndex = zIndex + 10 + index
+	const _zIndex = zIndex + 10 + indexPath.item
 
 	let style: CSSProperties = {
 		position: "absolute",
@@ -35,7 +38,7 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 		}
 	}
 
-	if (selectedIndex === index) {
+	if (selectedIndex === indexPath.item) {
 		style = {
 			...style,
 			opacity: 0.6
@@ -45,23 +48,15 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 	return (
 		<div
 			style={style}
-			onMouseDown={(event) => {
-				setSelectedIndex!(index)
-				onMouseDownOnItem!(event)
-
-			}}
-			onMouseMove={onMouseMoveOnItem}
-			onMouseUp={(event) => {
-				onMouseUpOnItem!(event)
-				setSelectedIndex!(undefined)
-			}}
+			onMouseDown={(event) => onMouseDownOnItem!(event, indexPath)}
+			onMouseMove={(event) => onMouseMoveOnItem!(event, indexPath)}
+			onMouseUp={(event) => onMouseUpOnItem!(event, indexPath)}
 		>
 			<div
 				style={{
 					width: "100%",
 					height: "100%",
-					position: "relative",
-					backgroundColor: "#eee"
+					position: "relative"
 				}}
 			>
 				<div
@@ -72,6 +67,9 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 						height: "8px",
 						cursor: "row-resize"
 					}}
+					onMouseDown={onMouseDownOnItemBottomEdge}
+				// onMouseMove={onMouseMoveOnItemBottomEdge}
+				// onMouseUp={onMouseUpOnItemBottomEdge}
 				>
 				</div>
 			</div>

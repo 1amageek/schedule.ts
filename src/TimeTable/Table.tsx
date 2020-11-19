@@ -1,29 +1,74 @@
 import React, { useContext, CSSProperties } from "react"
-import { Context } from "./Context"
+import { Item, IndexPath, Context } from "./Context"
 import Card from "./Card"
+import { useSize } from "./Geometory"
 
-const Component = ({ numberOfRows = 24 }: { numberOfRows?: number }) => {
+const Component = ({ numberOfSections, numberOfRows, numberOfColumns }: { numberOfSections: number, numberOfRows: number, numberOfColumns: number }) => {
 
 	const {
 		zIndex,
 		step,
 		numberOfStepsForSection,
 		size,
-		items,
+		data,
 		currentItem,
-		onMouseDownOnItem,
-		onMouseMoveOnItem,
-		onMouseUpOnItem,
 		onMouseDownOnTable,
 		onMouseMoveOnTable,
 		onMouseUpOnTable
 	} = useContext(Context)
 
-	const columns = [...new Array(numberOfRows).keys()]
-	const zIndexOffset = zIndex + 10
+	const columns = [...new Array(numberOfColumns).keys()]
 
 	return (
-		<>
+		<div
+			style={{
+				display: "flex",
+				width: "100%",
+				height: "100%"
+			}}
+			onMouseDown={onMouseDownOnTable}
+			onMouseMove={onMouseMoveOnTable}
+			onMouseUp={onMouseUpOnTable}
+		>
+			{columns.map(index => {
+				return <>
+					<Column
+						key={index}
+						section={index}
+						numberOfRows={numberOfRows}
+						items={data[index] ?? []}
+					/>
+					{numberOfRows - 1 !== index && <Divider direction="vertical" />}
+				</>
+			})}
+		</div>
+	)
+}
+
+const Column = ({ section, numberOfRows, items }: { section: number, numberOfRows: number, items: Item[] }) => {
+
+	const {
+		zIndex,
+		step,
+		numberOfStepsForSection,
+		currentItem,
+		onMouseDownOnColumn,
+		onMouseMoveOnColumn,
+		onMouseUpOnColumn,
+	} = useContext(Context)
+
+	const [ref, size] = useSize<HTMLDivElement>()
+
+	const rows = [...new Array(numberOfRows).keys()]
+
+	return (
+		<div
+			ref={ref}
+			style={{
+				width: "100%",
+				height: "100%"
+			}}
+		>
 			<div style={{
 				position: "absolute",
 				width: `${size.width}px`,
@@ -32,41 +77,47 @@ const Component = ({ numberOfRows = 24 }: { numberOfRows?: number }) => {
 				padding: 0,
 				zIndex: zIndex
 			}}
-				onMouseDown={onMouseDownOnTable}
-				onMouseMove={onMouseMoveOnTable}
-				onMouseUp={onMouseUpOnTable}
+				onMouseDown={(event) => onMouseDownOnColumn!(event, section)}
+				onMouseMove={(event) => onMouseMoveOnColumn!(event, section)}
+				onMouseUp={(event) => onMouseUpOnColumn!(event, section)}
 			>
-				{currentItem && <Card index={items.length} item={currentItem} isRequiredShadow />}
+				{currentItem && currentItem.section === section && <Card indexPath={{ section, item: items.length }} item={currentItem} isRequiredShadow />}
 				{
 					items.map((item, index) => {
-						return <Card key={index} index={index} item={item} />
+						const indexPath = { section, item: index }
+						return <Card key={index} indexPath={indexPath} item={item} />
 					})
 				}
 			</div>
-			{columns.map(index => {
-				return <HourBlock
-					key={index}
-					height={step * numberOfStepsForSection}
-					isBorderReauired={numberOfRows - 1 !== index}
-				/>
+			{rows.map(index => {
+				return <>
+					<div
+						key={index}
+						style={{
+							height: `${step * numberOfStepsForSection}px`
+						}}
+					>
+					</div>
+					{numberOfRows - 1 !== index && <Divider />}
+				</>
 			})}
-		</>
+		</div>
 	)
 }
 
-const HourBlock = ({ height, isBorderReauired }: { height: number, isBorderReauired?: boolean }) => {
-	let style: CSSProperties = {
-		height: `${height}px`,
-		width: "100%",
-		boxSizing: "border-box"
-	}
+const Divider = ({ direction = "horizontal" }: { direction?: "vertical" | "horizontal" }) => {
 
-	if (!!isBorderReauired) {
-		style = {
-			...style,
+	const style: CSSProperties = direction == "vertical" ?
+		{
+			width: "0.5px",
+			boxSizing: "border-box",
+			borderRight: "0.5px solid #ddd"
+		} :
+		{
+			height: "0.5px",
+			boxSizing: "border-box",
 			borderBottom: "0.5px solid #ddd"
 		}
-	}
 
 	return (
 		<div style={style}>
