@@ -1,12 +1,12 @@
 import React, { useState, CSSProperties } from "react"
-import { Provider, Item } from "./Context"
+import { Provider, Data, Item } from "./Context"
 import Table from "./Table"
 
-const Component = ({ items, onCreate }: { items: Item[], onCreate: (item: Item, done: (item: Item) => void) => void }) => {
+const Component = ({ data, onCreate }: { data: Data, onCreate: (item: Item, done: (item: Item) => void) => void }) => {
 
 	return (
 		<Provider
-			initialItems={items}
+			initialData={data}
 			onCreate={onCreate}
 		>
 			<Table />

@@ -1,29 +1,67 @@
 import React, { useContext, CSSProperties } from "react"
-import { Context } from "./Context"
+import { Item, IndexPath, Context } from "./Context"
 import Card from "./Card"
+import { useSize } from "./Geometory"
 
-const Component = ({ numberOfRows = 24 }: { numberOfRows?: number }) => {
+const Component = () => {
 
 	const {
-		zIndex,
-		step,
-		numberOfStepsForSection,
-		size,
-		items,
-		currentItem,
-		onMouseDownOnItem,
-		onMouseMoveOnItem,
-		onMouseUpOnItem,
+		data,
+		cursor,
+		numberOfChapters,
 		onMouseDownOnTable,
 		onMouseMoveOnTable,
 		onMouseUpOnTable
 	} = useContext(Context)
 
-	const columns = [...new Array(numberOfRows).keys()]
-	const zIndexOffset = zIndex + 10
+	const columns = [...new Array(numberOfChapters).keys()]
 
 	return (
-		<>
+		<div
+			style={{
+				display: "flex",
+				width: "100%",
+				height: "100%",
+				cursor: cursor
+			}}
+			onMouseDown={onMouseDownOnTable}
+			onMouseMove={onMouseMoveOnTable}
+			onMouseUp={onMouseUpOnTable}
+		>
+			{columns.map(index => {
+				return <Column
+					key={index}
+					chapter={index}
+					items={data}
+				/>
+			})}
+		</div>
+	)
+}
+
+const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
+
+	const {
+		zIndex,
+		step,
+		numberOfChapters,
+		numberOfSections,
+		numberOfItems,
+		currentItem
+	} = useContext(Context)
+
+	const [ref, size] = useSize<HTMLDivElement>()
+	const numberOfRows = numberOfSections
+	const rows = [...new Array(numberOfRows).keys()]
+
+	return (
+		<div
+			ref={ref}
+			style={{
+				width: "100%",
+				height: "100%"
+			}}
+		>
 			<div style={{
 				position: "absolute",
 				width: `${size.width}px`,
@@ -32,44 +70,58 @@ const Component = ({ numberOfRows = 24 }: { numberOfRows?: number }) => {
 				padding: 0,
 				zIndex: zIndex
 			}}
-				onMouseDown={onMouseDownOnTable}
-				onMouseMove={onMouseMoveOnTable}
-				onMouseUp={onMouseUpOnTable}
 			>
-				{currentItem && <Card index={items.length} item={currentItem} isRequiredShadow />}
+				{currentItem && currentItem.start.chapter === chapter && <Card index={items.length} item={currentItem} isRequiredShadow />}
 				{
-					items.map((item, index) => {
-						return <Card key={index} index={index} item={item} />
-					})
+					items
+						.filter(item => item.start.chapter === chapter)
+						.map((item, index) => {
+							return <Card key={`${chapter}-${index}`} index={index} item={item} />
+						})
 				}
 			</div>
-			{columns.map(index => {
-				return <HourBlock
+			{rows.map(index => {
+				const isRequiredBorders = []
+				if (numberOfSections - 1 !== index) isRequiredBorders.push("bottom")
+				if (numberOfChapters - 1 !== chapter) isRequiredBorders.push("right")
+				return <Row
 					key={index}
-					height={step * numberOfStepsForSection}
-					isBorderReauired={numberOfRows - 1 !== index}
+					height={step * numberOfItems}
+					isRequiredBorders={isRequiredBorders}
 				/>
 			})}
-		</>
+		</div>
 	)
 }
 
-const HourBlock = ({ height, isBorderReauired }: { height: number, isBorderReauired?: boolean }) => {
-	let style: CSSProperties = {
+const Row = ({ height, isRequiredBorders = [] }: { height: number, isRequiredBorders: string[] }) => {
+
+	const style: CSSProperties = {
 		height: `${height}px`,
 		width: "100%",
 		boxSizing: "border-box"
 	}
 
-	if (!!isBorderReauired) {
-		style = {
-			...style,
-			borderBottom: "0.5px solid #ddd"
-		}
+	if (isRequiredBorders.includes("top")) {
+		style["borderTop"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("bottom")) {
+		style["borderBottom"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("left")) {
+		style["borderLeft"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("right")) {
+		style["borderRight"] = "0.5px solid #ddd"
 	}
 
 	return (
-		<div style={style}>
+		<div
+			style={style}
+		>
 		</div>
 	)
 }
