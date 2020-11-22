@@ -7,6 +7,7 @@ const Component = () => {
 
 	const {
 		data,
+		cursor,
 		numberOfChapters,
 		onMouseDownOnTable,
 		onMouseMoveOnTable,
@@ -20,21 +21,19 @@ const Component = () => {
 			style={{
 				display: "flex",
 				width: "100%",
-				height: "100%"
+				height: "100%",
+				cursor: cursor
 			}}
 			onMouseDown={onMouseDownOnTable}
 			onMouseMove={onMouseMoveOnTable}
 			onMouseUp={onMouseUpOnTable}
 		>
 			{columns.map(index => {
-				return <>
-					<Column
-						key={index}
-						chapter={index}
-						items={data}
-					/>
-					{numberOfChapters - 1 !== index && <Divider direction="vertical" />}
-				</>
+				return <Column
+					key={index}
+					chapter={index}
+					items={data}
+				/>
 			})}
 		</div>
 	)
@@ -45,16 +44,13 @@ const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
 	const {
 		zIndex,
 		step,
+		numberOfChapters,
 		numberOfSections,
 		numberOfItems,
-		currentItem,
-		onMouseDownOnColumn,
-		onMouseMoveOnColumn,
-		onMouseUpOnColumn,
+		currentItem
 	} = useContext(Context)
 
 	const [ref, size] = useSize<HTMLDivElement>()
-
 	const numberOfRows = numberOfSections
 	const rows = [...new Array(numberOfRows).keys()]
 
@@ -74,64 +70,58 @@ const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
 				padding: 0,
 				zIndex: zIndex
 			}}
-			// onMouseDown={(event) => onMouseDownOnColumn!(event, section)}
-			// onMouseMove={(event) => onMouseMoveOnColumn!(event, section)}
-			// onMouseUp={(event) => onMouseUpOnColumn!(event, section)}
 			>
 				{currentItem && currentItem.start.chapter === chapter && <Card index={items.length} item={currentItem} isRequiredShadow />}
 				{
 					items
 						.filter(item => item.start.chapter === chapter)
 						.map((item, index) => {
-							return <Card key={index} index={index} item={item} />
+							return <Card key={`${chapter}-${index}`} index={index} item={item} />
 						})
 				}
 			</div>
 			{rows.map(index => {
-				return <>
-					<Row
-						key={index}
-						height={step * numberOfItems}
-					/>
-					{numberOfRows - 1 !== index && <Divider />}
-				</>
+				const isRequiredBorders = []
+				if (numberOfSections - 1 !== index) isRequiredBorders.push("bottom")
+				if (numberOfChapters - 1 !== chapter) isRequiredBorders.push("right")
+				return <Row
+					key={index}
+					height={step * numberOfItems}
+					isRequiredBorders={isRequiredBorders}
+				/>
 			})}
 		</div>
 	)
 }
 
-const Row = ({ height }: { height: number }) => {
+const Row = ({ height, isRequiredBorders = [] }: { height: number, isRequiredBorders: string[] }) => {
+
+	const style: CSSProperties = {
+		height: `${height}px`,
+		width: "100%",
+		boxSizing: "border-box"
+	}
+
+	if (isRequiredBorders.includes("top")) {
+		style["borderTop"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("bottom")) {
+		style["borderBottom"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("left")) {
+		style["borderLeft"] = "0.5px solid #ddd"
+	}
+
+	if (isRequiredBorders.includes("right")) {
+		style["borderRight"] = "0.5px solid #ddd"
+	}
 
 	return (
 		<div
-			style={{
-				height: `${height}px`
-			}}
-		// onMouseDown={(event) => onMouseDownOnBlock!(event, indexPath)}
-		// onMouseMove={(event) => onMouseMoveOnBlock!(event, indexPath)}
-		// onMouseUp={(event) => onMouseUpOnBlock!(event, indexPath)}
+			style={style}
 		>
-
-		</div>
-	)
-}
-
-const Divider = ({ direction = "horizontal" }: { direction?: "vertical" | "horizontal" }) => {
-
-	const style: CSSProperties = direction == "vertical" ?
-		{
-			width: "0.5px",
-			boxSizing: "border-box",
-			borderRight: "0.5px solid #ddd"
-		} :
-		{
-			height: "0.5px",
-			boxSizing: "border-box",
-			borderBottom: "0.5px solid #ddd"
-		}
-
-	return (
-		<div style={style}>
 		</div>
 	)
 }

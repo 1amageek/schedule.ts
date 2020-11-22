@@ -7,14 +7,10 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 		step,
 		numberOfItems,
 		onMouseDownOnItem,
-		onMouseMoveOnItem,
-		onMouseUpOnItem,
 		onMouseDownOnItemBottomEdge,
-		onMouseMoveOnItemBottomEdge,
-		onMouseUpOnItemBottomEdge,
-		setSelectedIndex,
-		selectedIndex,
-		zIndex
+		operation,
+		zIndex,
+		cursor
 	} = useContext(Context)
 
 	const _zIndex = zIndex + 10 + index
@@ -23,8 +19,6 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 	const top = item.start.section * heightOfSection + step * item.start.item
 	const bottom = item.end.section * heightOfSection + step * item.end.item
 	const height = bottom - top
-
-	// console.log(top, height)
 
 	let style: CSSProperties = {
 		position: "absolute",
@@ -37,17 +31,17 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 		borderRadius: "8px",
 		border: "solid 1px #FFF",
 		background: "linear-gradient(90deg, rgba(79,0,255,1) 0%, rgba(0,119,255,1) 100%)",
-		cursor: "pointer"
+		cursor: cursor ?? "pointer"
 	}
 
 	if (!!isRequiredShadow) {
 		style = {
 			...style,
-			boxShadow: "0px 4px 20px -3px rgba(0,0,0,0.35)"
+			boxShadow: "0px 4px 20px -0px rgba(0,0,0,0.4)"
 		}
 	}
 
-	if (selectedIndex === index) {
+	if (operation?.move?.before === item || operation?.update?.before === item) {
 		style = {
 			...style,
 			opacity: 0.6
@@ -57,9 +51,7 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 	return (
 		<div
 			style={style}
-		// onMouseDown={(event) => onMouseDownOnItem!(event, indexPath)}
-		// onMouseMove={(event) => onMouseMoveOnItem!(event, indexPath)}
-		// onMouseUp={(event) => onMouseUpOnItem!(event, indexPath)}
+			onMouseDown={(event) => onMouseDownOnItem!(event, item)}
 		>
 			<div
 				style={{
@@ -68,17 +60,22 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 					position: "relative"
 				}}
 			>
+				<label
+					style={{
+						color: "#FFF",
+						display: "block",
+						userSelect: "none"
+					}}
+				>{`${item.start.chapter}:${item.start.section}:${item.start.item} - ${item.end.chapter}:${item.end.section}:${item.end.item}`}</label>
 				<div
 					style={{
 						position: "absolute",
 						bottom: 0,
 						width: "100%",
 						height: "8px",
-						cursor: "row-resize"
+						cursor: cursor ?? "row-resize"
 					}}
-					onMouseDown={onMouseDownOnItemBottomEdge}
-				// onMouseMove={onMouseMoveOnItemBottomEdge}
-				// onMouseUp={onMouseUpOnItemBottomEdge}
+					onMouseDown={(event) => onMouseDownOnItemBottomEdge!(event, item)}
 				>
 				</div>
 			</div>
