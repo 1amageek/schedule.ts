@@ -1,5 +1,5 @@
-import React, { useState, createContext, useLayoutEffect, Dispatch, useMemo, useEffect } from "react"
-import { useSize, Size, Point, Rect } from "./Geometory"
+import React, { useState, createContext, useEffect } from "react"
+import { useSize, Size, Point } from "./Geometory"
 
 const STEP = 12
 const NUBMER_OF_ITEMS = 4
@@ -95,8 +95,13 @@ export const Provider = ({
 	useEffect(() => {
 
 		if (operation?.add) {
-			setCursor("move")
-			setCurrentItem(operation.add)
+			if (!equalTo(operation.add.start, operation.add.end)) {
+				setCursor("move")
+				setCurrentItem(operation.add)
+			} else {
+				setCursor(undefined)
+				setCurrentItem(undefined)
+			}
 		} else if (operation?.move) {
 			setCursor("move")
 			setCurrentItem(operation.move.after)
@@ -117,6 +122,56 @@ export const Provider = ({
 		const heightOfSection = step * numberOfItems
 		const item = Math.min(Math.max(Math.floor(((point.y - (section * heightOfSection)) / heightOfSection) * numberOfItems), 0), numberOfItems - 1)
 		return { chapter, section, item }
+	}
+
+	const equalTo = (l: IndexPath, r: IndexPath) => {
+		const lnum = Number(`${l.chapter}${l.section}${l.item}`)
+		const rnum = Number(`${r.chapter}${r.section}${r.item}`)
+		return lnum === rnum
+	}
+
+	const largerThan = (l: IndexPath, r: IndexPath) => {
+		const lnum = Number(`${l.chapter}${l.section}${l.item}`)
+		const rnum = Number(`${r.chapter}${r.section}${r.item}`)
+		return lnum < rnum
+	}
+
+	const sum = (l: IndexPath, r: IndexPath, max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
+		const sum = (l: number, r: number, c: number, max: number) => {
+			const sum = l + r + c
+			const value = sum % max
+			const carry = Math.floor(sum / max)
+			return [value, carry]
+		}
+
+		const [itemValue, itemCarry] = sum(l.item, r.item, 0, max.numberOfItems)
+		const [sectionValue, sectionCarry] = sum(l.section, r.section, itemCarry, max.numberOfSections)
+		const [chapterValue] = sum(l.chapter, r.chapter, sectionCarry, max.numberOfChapters)
+
+		return {
+			chapter: chapterValue,
+			section: sectionValue,
+			item: itemValue
+		}
+	}
+
+	const diff = (l: IndexPath, r: IndexPath, max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
+		const diff = (l: number, r: number, c: number, max: number) => {
+			const sum = l - r - c
+			const value = sum % max
+			const carry = Math.floor(sum / max)
+			return [value, carry]
+		}
+
+		const [itemValue, itemCarry] = diff(l.item, r.item, 0, max.numberOfItems)
+		const [sectionValue, sectionCarry] = diff(l.section, r.section, itemCarry, max.numberOfSections)
+		const [chapterValue] = diff(l.chapter, r.chapter, sectionCarry, max.numberOfChapters)
+
+		return {
+			chapter: chapterValue,
+			section: sectionValue,
+			item: itemValue
+		}
 	}
 
 	const onMouseDownOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -153,22 +208,12 @@ export const Provider = ({
 				end: indexPath
 			}
 
-			// if (operation.event.initial.chapter > operation.event.current.chapter) {
-			// 	add = {
-			// 		start: indexPath,
-			// 		end: operation.event.initial
-			// 	}
-			// } else if (operation.event.initial.section > operation.event.current.section) {
-			// 	add = {
-			// 		start: indexPath,
-			// 		end: operation.event.initial
-			// 	}
-			// } else if (operation.event.initial.item > operation.event.current.item) {
-			// 	add = {
-			// 		start: indexPath,
-			// 		end: operation.event.initial
-			// 	}
-			// }
+			if (largerThan(indexPath, operation.event.initial)) {
+				add = {
+					start: indexPath,
+					end: operation.event.initial
+				}
+			}
 
 			setOperation({
 				event: {
@@ -256,6 +301,10 @@ export const Provider = ({
 
 	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: Item) => {
 		event.stopPropagation()
+		if (operation?.add || operation?.update) {
+			console.log("onMouseDownOnItem")
+			return
+		}
 		const bounds = ref.current?.getBoundingClientRect()
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
@@ -272,9 +321,12 @@ export const Provider = ({
 		})
 	}
 
-
 	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: Item) => {
 		event.stopPropagation()
+		if (operation?.add || operation?.move) {
+			console.log("onMouseDownOnItemBottomEdge")
+			return
+		}
 		const bounds = ref.current?.getBoundingClientRect()
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
