@@ -1,7 +1,7 @@
-import React, { useState, useContext, CSSProperties } from "react"
-import { Item, IndexPath, Context } from "./Context"
+import React, { useContext, CSSProperties } from "react"
+import { CardItem, Context } from "./Context"
 
-const Component = ({ item, index, isRequiredShadow }: { item: Item, index: number, isRequiredShadow?: boolean }) => {
+const Component = ({ item, index, isRequiredShadow }: { item: CardItem, index: number, isRequiredShadow?: boolean }) => {
 
 	const {
 		step,
@@ -28,7 +28,7 @@ const Component = ({ item, index, isRequiredShadow }: { item: Item, index: numbe
 		height: `${height}px`,
 		margin: 0,
 		padding: 0,
-		borderRadius: "8px",
+		borderRadius: "4px",
 		border: "solid 1px #FFF",
 		background: "linear-gradient(90deg, rgba(79,0,255,1) 0%, rgba(0,119,255,1) 100%)",
 		cursor: cursor ?? "pointer"

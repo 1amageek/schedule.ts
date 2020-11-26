@@ -1,12 +1,11 @@
 import React, { useContext, CSSProperties } from "react"
-import { Item, IndexPath, Context } from "./Context"
+import { Item, useCardItemProvider, Context } from "./Context"
 import Card from "./Card"
 import { useSize } from "./Geometory"
 
 const Component = () => {
 
 	const {
-		data,
 		cursor,
 		numberOfChapters,
 		onMouseDownOnTable,
@@ -32,27 +31,16 @@ const Component = () => {
 				return <Column
 					key={index}
 					chapter={index}
-					items={data}
 				/>
 			})}
 		</div>
 	)
 }
 
-const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
+const Column = ({ chapter }: { chapter: number }) => {
 
-	const {
-		zIndex,
-		step,
-		numberOfChapters,
-		numberOfSections,
-		numberOfItems,
-		currentItem
-	} = useContext(Context)
-
+	const { zIndex } = useContext(Context)
 	const [ref, size] = useSize<HTMLDivElement>()
-	const numberOfRows = numberOfSections
-	const rows = [...new Array(numberOfRows).keys()]
 
 	return (
 		<div
@@ -71,26 +59,72 @@ const Column = ({ chapter, items }: { chapter: number, items: Item[] }) => {
 				zIndex: zIndex
 			}}
 			>
-				{currentItem && currentItem.start.chapter === chapter && <Card index={items.length} item={currentItem} isRequiredShadow />}
-				{
-					items
-						.filter(item => item.start.chapter === chapter)
-						.map((item, index) => {
-							return <Card key={`${chapter}-${index}`} index={index} item={item} />
-						})
-				}
+				<Canvas chapter={chapter} />
 			</div>
-			{rows.map(index => {
-				const isRequiredBorders = []
-				if (numberOfSections - 1 !== index) isRequiredBorders.push("bottom")
-				if (numberOfChapters - 1 !== chapter) isRequiredBorders.push("right")
-				return <Row
-					key={index}
-					height={step * numberOfItems}
-					isRequiredBorders={isRequiredBorders}
-				/>
-			})}
+			<Background chapter={chapter} />
 		</div>
+	)
+}
+
+const Canvas = ({ chapter }: { chapter: number }) => {
+	const {
+		currentItem,
+		data
+	} = useContext(Context)
+
+	const items = useCardItemProvider(data)
+	const currentItems = useCardItemProvider(currentItem ? [currentItem] : [])
+
+	return (
+		<div style={{
+			width: "100%",
+			height: "100%",
+			margin: 0,
+			padding: 0
+		}}
+		>
+			{
+				currentItems
+					.filter(item => item.start.chapter === chapter)
+					.map((item, index) => {
+						return <Card key={`${chapter}-${index}`} index={index} item={item} isRequiredShadow />
+					})
+			}
+			{
+				items
+					.filter(item => item.start.chapter === chapter)
+					.map((item, index) => {
+						return <Card key={`${chapter}-${index}`} index={index} item={item} />
+					})
+			}
+		</div>
+	)
+}
+
+const Background = ({ chapter }: { chapter: number }) => {
+	const {
+		step,
+		numberOfChapters,
+		numberOfSections,
+		numberOfItems,
+	} = useContext(Context)
+	const numberOfRows = numberOfSections
+	const rows = [...new Array(numberOfRows).keys()]
+	return (
+		<>
+			{
+				rows.map(index => {
+					const isRequiredBorders = []
+					if (numberOfSections - 1 !== index) isRequiredBorders.push("bottom")
+					if (numberOfChapters - 1 !== chapter) isRequiredBorders.push("right")
+					return <Row
+						key={index}
+						height={step * numberOfItems}
+						isRequiredBorders={isRequiredBorders}
+					/>
+				})
+			}
+		</>
 	)
 }
 
