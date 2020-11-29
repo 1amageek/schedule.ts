@@ -435,3 +435,28 @@ export const useCardItemProvider = (items: Item[]) => {
 	})
 	return cardItems
 }
+
+export const useCardPositionProvider = (cardItems: CardItem[]) => {
+
+	const overlapping: CardItem[] = []
+
+	cardItems.forEach((cardItem, index) => {
+		cardItems
+			.filter(item => item.id !== cardItem.id)
+			.filter(item => !overlapping.includes(item))
+			.forEach(item => {
+				if (cardItem.start < item.start && item.end < cardItem.end) {
+
+				}
+
+				if (cardItem.start < item.start && item.start < cardItem.end) {
+
+				}
+
+				if (cardItem.start < item.end && item.end < cardItem.end) {
+
+				}
+			})
+	})
+
+}

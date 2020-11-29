@@ -87,7 +87,7 @@ const Canvas = ({ chapter }: { chapter: number }) => {
 				currentItems
 					.filter(item => item.start.chapter === chapter)
 					.map((item, index) => {
-						return <Card key={`${chapter}-${index}`} index={index} item={item} isRequiredShadow />
+						return <Card key={`${chapter}-${index}`} index={items.length} item={item} isRequiredShadow />
 					})
 			}
 			{
