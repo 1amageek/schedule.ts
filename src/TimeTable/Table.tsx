@@ -2,6 +2,7 @@ import React, { useContext, CSSProperties } from "react"
 import { Item, useCardItemProvider, Context } from "./Context"
 import Card from "./Card"
 import { useSize } from "./Geometory"
+import { useLayout } from "./Layout"
 
 const Component = () => {
 
@@ -69,11 +70,26 @@ const Column = ({ chapter }: { chapter: number }) => {
 const Canvas = ({ chapter }: { chapter: number }) => {
 	const {
 		currentItem,
+		numberOfChapters,
+		numberOfSections,
+		numberOfItems,
 		data
 	} = useContext(Context)
 
-	const items = useCardItemProvider(data)
-	const currentItems = useCardItemProvider(currentItem ? [currentItem] : [])
+	const _items = useCardItemProvider(data)
+	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : [])
+
+	const items = useLayout(_items, {
+		numberOfChapters,
+		numberOfSections,
+		numberOfItems
+	})
+
+	const currentItems = useLayout(_currentItems, {
+		numberOfChapters,
+		numberOfSections,
+		numberOfItems
+	})
 
 	return (
 		<div style={{

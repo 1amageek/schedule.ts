@@ -1,19 +1,14 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
 import { useSize, Size, Point } from "./Geometory"
+import { CardItem } from "./Layout"
 
 const STEP = 12
 const NUBMER_OF_ITEMS = 4
 const NUMBER_OF_SECTIONS = 24
-const NUMBER_OF_CHAPTERS = 7
+const NUMBER_OF_CHAPTERS = 1
 const ZINDEX = 100
 
 export interface Item {
-	start: IndexPath
-	end: IndexPath
-}
-
-export interface CardItem {
-	id: number
 	start: IndexPath
 	end: IndexPath
 }

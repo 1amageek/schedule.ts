@@ -1,7 +1,8 @@
 import React, { useContext, CSSProperties } from "react"
-import { CardItem, Context } from "./Context"
+import { Context } from "./Context"
+import { LayoutAttributes } from "./Layout"
 
-const Component = ({ item, index, isRequiredShadow }: { item: CardItem, index: number, isRequiredShadow?: boolean }) => {
+const Component = ({ item, index, isRequiredShadow }: { item: LayoutAttributes, index: number, isRequiredShadow?: boolean }) => {
 
 	const {
 		step,
@@ -24,14 +25,16 @@ const Component = ({ item, index, isRequiredShadow }: { item: CardItem, index: n
 		position: "absolute",
 		zIndex: _zIndex,
 		top: `${top}px`,
-		width: "98%",
+		width: `${(100 / item.position.column) * (item.position.end - item.position.start)}%`,
 		height: `${height}px`,
 		margin: 0,
 		padding: 0,
+		left: `${(100 / (item.position.column) * item.position.start)}%`,
 		borderRadius: "4px",
 		border: "solid 1px #FFF",
 		background: "linear-gradient(90deg, rgba(79,0,255,1) 0%, rgba(0,119,255,1) 100%)",
-		cursor: cursor ?? "pointer"
+		cursor: cursor ?? "pointer",
+		boxSizing: "border-box"
 	}
 
 	if (!!isRequiredShadow) {
@@ -66,7 +69,7 @@ const Component = ({ item, index, isRequiredShadow }: { item: CardItem, index: n
 						display: "block",
 						userSelect: "none"
 					}}
-				>{`${item.start.chapter}:${item.start.section}:${item.start.item} - ${item.end.chapter}:${item.end.section}:${item.end.item}`}</label>
+				>{`${item.id} - ${item.start.chapter}:${item.start.section}:${item.start.item} - ${item.end.chapter}:${item.end.section}:${item.end.item}`}</label>
 				<div
 					style={{
 						position: "absolute",
