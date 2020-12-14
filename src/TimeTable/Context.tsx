@@ -5,7 +5,7 @@ import { CardItem } from "./Layout"
 const STEP = 12
 const NUBMER_OF_ITEMS = 4
 const NUMBER_OF_SECTIONS = 24
-const NUMBER_OF_CHAPTERS = 1
+const NUMBER_OF_CHAPTERS = 7
 const ZINDEX = 100
 
 export interface Item {
