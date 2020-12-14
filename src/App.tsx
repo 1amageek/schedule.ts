@@ -1,6 +1,6 @@
 import React from "react"
-// import Timeline from "./Timeline"
 import TimeTable from "./TimeTable"
+import Card from "./TimeTable/Card"
 
 const Component = () => {
 	return (
@@ -20,7 +20,11 @@ const Component = () => {
 					alert("save?")
 					done(item)
 				}}
-			/>
+			>
+				<Card>
+
+				</Card>
+			</TimeTable>
 		</div>
 	)
 }

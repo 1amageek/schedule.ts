@@ -1,10 +1,10 @@
-import React, { useContext, CSSProperties } from "react"
+import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
 import { Item, useCardItemProvider, Context } from "./Context"
-import Card from "./Card"
+import { CardItemProvider } from "./CardContext"
 import { useSize } from "./Geometory"
 import { useLayout } from "./Layout"
 
-const Component = () => {
+const Component = ({ children }: { children: ReactElement }) => {
 
 	const {
 		cursor,
@@ -29,16 +29,20 @@ const Component = () => {
 			onMouseUp={onMouseUpOnTable}
 		>
 			{columns.map(index => {
-				return <Column
-					key={index}
-					chapter={index}
-				/>
+				return (
+					<Column
+						key={index}
+						chapter={index}
+					>
+						{children}
+					</Column>
+				)
 			})}
 		</div>
 	)
 }
 
-const Column = ({ chapter }: { chapter: number }) => {
+const Column = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 
 	const { zIndex } = useContext(Context)
 	const [ref, size] = useSize<HTMLDivElement>()
@@ -60,14 +64,16 @@ const Column = ({ chapter }: { chapter: number }) => {
 				zIndex: zIndex
 			}}
 			>
-				<Canvas chapter={chapter} />
+				<Canvas chapter={chapter}>
+					{children}
+				</Canvas>
 			</div>
 			<Background chapter={chapter} />
 		</div>
 	)
 }
 
-const Canvas = ({ chapter }: { chapter: number }) => {
+const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 	const {
 		currentItem,
 		numberOfChapters,
@@ -99,20 +105,44 @@ const Canvas = ({ chapter }: { chapter: number }) => {
 			padding: 0
 		}}
 		>
-			{
-				currentItems
-					.filter(item => item.start.chapter === chapter)
-					.map((item, index) => {
-						return <Card key={`${chapter}-${index}`} index={items.length} item={item} isRequiredShadow />
-					})
-			}
-			{
-				items
-					.filter(item => item.start.chapter === chapter)
-					.map((item, index) => {
-						return <Card key={`${chapter}-${index}`} index={index} item={item} />
-					})
-			}
+			<CardItemProvider>
+				<>
+					{
+						currentItems
+							.filter(item => item.start.chapter === chapter)
+							.map((item, index) => {
+								const newChildren = cloneElement(children, {
+									key: `${chapter}-${index}`,
+									index: items.length,
+									item: item,
+									isRequiredShadow: true
+								})
+								return (
+									<div key={`${chapter}-${index}`}>{newChildren}</div>
+								)
+							})
+					}
+				</>
+			</CardItemProvider>
+
+			<CardItemProvider>
+				<>
+					{
+						items
+							.filter(item => item.start.chapter === chapter)
+							.map((item, index) => {
+								const newChildren = cloneElement(children, {
+									key: `${chapter}-${index}`,
+									index: index,
+									item: item
+								})
+								return (
+									<div key={`${chapter}-${index}`}>{newChildren}</div>
+								)
+							})
+					}
+				</>
+			</CardItemProvider>
 		</div>
 	)
 }

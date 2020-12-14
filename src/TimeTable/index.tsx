@@ -1,15 +1,17 @@
-import React, { useState, CSSProperties } from "react"
+import React, { ReactElement } from "react"
 import { Provider, Data, Item } from "./Context"
 import Table from "./Table"
 
-const Component = ({ data, onCreate }: { data: Data, onCreate: (item: Item, done: (item: Item) => void) => void }) => {
+const Component = ({ data, onCreate, children }: { data: Data, children: ReactElement, onCreate: (item: Item, done: (item: Item) => void) => void }) => {
 
 	return (
 		<Provider
 			initialData={data}
 			onCreate={onCreate}
 		>
-			<Table />
+			<Table>
+				{children}
+			</Table>
 		</Provider>
 	)
 }

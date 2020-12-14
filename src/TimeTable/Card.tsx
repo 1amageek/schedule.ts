@@ -1,8 +1,9 @@
-import React, { useContext, CSSProperties } from "react"
+import React, { useContext, CSSProperties, ReactElement } from "react"
 import { Context } from "./Context"
 import { LayoutAttributes } from "./Layout"
 
-const Component = ({ item, index, isRequiredShadow }: { item: LayoutAttributes, index: number, isRequiredShadow?: boolean }) => {
+// const Component = ({ item, index, isRequiredShadow, children }: { item: LayoutAttributes, index: number, isRequiredShadow?: boolean, children?: ReactElement }) => {
+const Component = (props: any) => {
 
 	const {
 		step,
@@ -14,6 +15,7 @@ const Component = ({ item, index, isRequiredShadow }: { item: LayoutAttributes, 
 		cursor
 	} = useContext(Context)
 
+	const { item, index, isRequiredShadow, children } = props
 	const _zIndex = zIndex + 10 + index
 
 	const heightOfSection = step * numberOfItems
@@ -63,13 +65,14 @@ const Component = ({ item, index, isRequiredShadow }: { item: LayoutAttributes, 
 					position: "relative"
 				}}
 			>
-				<label
+				{children}
+				{/* <label
 					style={{
 						color: "#FFF",
 						display: "block",
 						userSelect: "none"
 					}}
-				>{`${item.id} - ${item.start.chapter}:${item.start.section}:${item.start.item} - ${item.end.chapter}:${item.end.section}:${item.end.item}`}</label>
+				>{`${item.id} - ${item.start.chapter}:${item.start.section}:${item.start.item} - ${item.end.chapter}:${item.end.section}:${item.end.item}`}</label> */}
 				<div
 					style={{
 						position: "absolute",

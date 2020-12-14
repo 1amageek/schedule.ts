@@ -1,4 +1,5 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
+import IndexPath, { isLessThan, isGreaterThan, isEqualTo } from "./IndexPath"
 import { useSize, Size, Point } from "./Geometory"
 import { CardItem } from "./Layout"
 
@@ -15,12 +16,6 @@ export interface Item {
 
 export type Data = Item[]
 
-export interface IndexPath {
-	chapter: number
-	section: number
-	item: number
-}
-
 interface Change {
 	before: Item
 	after: Item
@@ -36,32 +31,6 @@ interface Operation {
 	add?: Item
 	move?: Change
 	update?: Change
-}
-
-const flatIndexPath = (indexPath: IndexPath) => {
-	const { chapter, section, item } = indexPath
-	const c = `${chapter}`.padStart(2, "0")
-	const s = `${section}`.padStart(2, "0")
-	const i = `${item}`.padStart(2, "0")
-	return Number(c + s + i)
-}
-
-const isEqualTo = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum === rnum
-}
-
-const isLessThan = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum < rnum
-}
-
-const isGreaterThan = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum > rnum
 }
 
 interface Props {
@@ -429,29 +398,4 @@ export const useCardItemProvider = (items: Item[]) => {
 		}
 	})
 	return cardItems
-}
-
-export const useCardPositionProvider = (cardItems: CardItem[]) => {
-
-	const overlapping: CardItem[] = []
-
-	cardItems.forEach((cardItem, index) => {
-		cardItems
-			.filter(item => item.id !== cardItem.id)
-			.filter(item => !overlapping.includes(item))
-			.forEach(item => {
-				if (cardItem.start < item.start && item.end < cardItem.end) {
-
-				}
-
-				if (cardItem.start < item.start && item.start < cardItem.end) {
-
-				}
-
-				if (cardItem.start < item.end && item.end < cardItem.end) {
-
-				}
-			})
-	})
-
 }
