@@ -5,6 +5,11 @@ export default interface IndexPath {
 	item: number
 }
 
+export interface IndexRangeable {
+	start: IndexPath
+	end: IndexPath
+}
+
 export const zero = {
 	chapter: 0,
 	section: 0,

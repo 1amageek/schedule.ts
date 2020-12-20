@@ -1,9 +1,33 @@
 import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
-import { useCardItemProvider, Context } from "./Context"
+import { useCardItemProvider, Context, Provider, ItemHandler } from "./Context"
 import { useSize } from "../Geometory"
 import { useLayout } from "../Layout"
+import Item from "../Item"
 
-const Component = ({ children }: { children: ReactElement }) => {
+interface Props {
+	initialData: Item[]
+	idProvider: () => string
+	onCreate: ItemHandler
+	onDelete: ItemHandler
+	children: ReactElement
+}
+
+const Component = ({ initialData, idProvider, onCreate, onDelete, children }: Props) => {
+	return (
+		<Provider
+			initialData={initialData}
+			idProvider={idProvider}
+			onCreate={onCreate}
+			onDelete={onDelete}
+		>
+			<Content>
+				{children}
+			</Content>
+		</Provider>
+	)
+}
+
+const Content = ({ children }: { children: ReactElement }) => {
 
 	const {
 		cursor,
@@ -40,6 +64,8 @@ const Component = ({ children }: { children: ReactElement }) => {
 		</div>
 	)
 }
+
+
 
 const Column = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 
@@ -81,8 +107,8 @@ const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement
 		data
 	} = useContext(Context)
 
-	const _items = useCardItemProvider(data)
-	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : [])
+	const _items = useCardItemProvider(data).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
+	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : []).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
 
 	const items = useLayout(_items, {
 		numberOfChapters,
@@ -113,7 +139,7 @@ const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement
 								key: `${chapter}-${index}`,
 								index: items.length,
 								layoutAttributes: layoutAttributes,
-								isActive: true
+								isDragging: true
 							})
 							return (
 								<div key={`${chapter}-${index}`}>{newChildren}</div>
@@ -130,7 +156,7 @@ const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement
 								key: `${chapter}-${index}`,
 								index: index,
 								layoutAttributes: layoutAttributes,
-								isActive: false
+								isDragging: false
 							})
 							return (
 								<div key={`${chapter}-${index}`}>{newChildren}</div>

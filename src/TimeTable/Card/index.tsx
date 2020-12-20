@@ -1,14 +1,53 @@
 import React, { useContext, CSSProperties, ReactElement } from "react"
+import Item from "../Item"
 import { Context } from "../Table/Context"
-import { LayoutAttributes } from "../Layout"
 
-interface Props {
-	normalStyle?: CSSProperties
-	activeStyle?: CSSProperties
-	children: ReactElement
+interface CardItemState {
+	isSelected: boolean
+	isUpdated: boolean
+	isDragging: boolean
 }
 
-// const Component = ({ item, index, isRequiredShadow, children }: { item: LayoutAttributes, index: number, isRequiredShadow?: boolean, children?: ReactElement }) => {
+export type CardItemData = (data: Item) => ReactElement
+
+interface Props {
+	getCurrentStyle?: (state: CardItemState) => CSSProperties
+	children: CardItemData
+}
+
+const DefaultStyle = (state: CardItemState): CSSProperties => {
+
+	const defaultStyle: CSSProperties = {
+		border: "solid 1px #FFF",
+		background: "rgba(0,119,255,0.8)",
+		boxSizing: "border-box",
+		color: "#FFF",
+		fontSize: "12px"
+	}
+
+	if (state.isDragging) {
+		return {
+			...defaultStyle,
+			background: "rgba(0,119,255,1)",
+			boxShadow: `0px 2px 25px 0px ${defaultStyle.background}`
+		}
+	}
+
+	if (state.isSelected) {
+		if (state.isUpdated) {
+			return {
+				...defaultStyle,
+				background: "rgba(0,119,255,0.4)",
+			}
+		}
+		return {
+			...defaultStyle,
+			background: "rgba(0,119,255,1)",
+		}
+	}
+	return defaultStyle
+}
+
 const Component = (props: Props) => {
 
 	const {
@@ -16,14 +55,15 @@ const Component = (props: Props) => {
 		numberOfItems,
 		onMouseDownOnItem,
 		onMouseDownOnItemBottomEdge,
-		onClickOnItem,
-		operation,
+		selectedItems,
 		zIndex,
-		cursor
+		cursor,
+		operation,
+		data
 	} = useContext(Context)
 
-	const { normalStyle, activeStyle } = props
-	const { layoutAttributes, index, isActive, children } = (props as any)
+	const { getCurrentStyle } = props
+	const { layoutAttributes, index, isDragging, children } = (props as any)
 	const _zIndex = zIndex + 10 + index
 
 	const heightOfSection = step * numberOfItems
@@ -40,37 +80,29 @@ const Component = (props: Props) => {
 		left: `${(100 / (layoutAttributes.position.column) * layoutAttributes.position.start)}%`,
 		width: `${(100 / layoutAttributes.position.column) * (layoutAttributes.position.end - layoutAttributes.position.start)}%`,
 		height: `${height}px`,
+		cursor: cursor ?? "pointer",
 		userSelect: "none"
 	}
 
-	const defaultStyle: CSSProperties = {
+	const getStyle = getCurrentStyle ?? DefaultStyle
+
+	const _style = getStyle({
+		isSelected: selectedItems.map(item => item.id).includes(layoutAttributes.id),
+		isDragging: isDragging,
+		isUpdated: operation?.move?.after !== undefined
+	})
+
+	const style = {
 		...position,
-		border: "solid 1px #FFF",
-		background: "rgba(0,119,255,0.7)",
-		cursor: cursor ?? "pointer",
-		boxSizing: "border-box",
-		color: "#FFF",
-		fontSize: "12px"
+		..._style
 	}
 
-	const _normalStyle = normalStyle ?? defaultStyle
-	const _activeStyle = activeStyle ?? {
-		...defaultStyle,
-		boxShadow: `0px 2px 25px 0px ${defaultStyle.background}`
-	}
-
-	// if (operation?.move?.before === layoutAttributes || operation?.update?.before === layoutAttributes) {
-	// 	provideStyle = {
-	// 		...provideStyle,
-	// 		opacity: 0.6
-	// 	}
-	// }
+	const content = children(layoutAttributes)
 
 	return (
 		<div
-			style={isActive ? _activeStyle : _normalStyle}
+			style={style}
 			onMouseDown={(event) => onMouseDownOnItem!(event, layoutAttributes)}
-			onClick={(event) => onClickOnItem!(event, layoutAttributes)}
 		>
 			<div
 				style={{
@@ -79,7 +111,7 @@ const Component = (props: Props) => {
 					position: "relative"
 				}}
 			>
-				{children}
+				{content}
 				<div
 					style={{
 						position: "absolute",
