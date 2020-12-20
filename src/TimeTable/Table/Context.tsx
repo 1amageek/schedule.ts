@@ -1,9 +1,9 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
-import IndexPath, { isLessThan, isGreaterThan, isEqualTo } from "./IndexPath"
-import { useSize, Size, Point } from "./Geometory"
-import { CardItem } from "./Layout"
+import IndexPath, { isLessThan, isGreaterThan, isEqualTo } from "../IndexPath"
+import { useSize, Size, Point } from "../Geometory"
+import { CardItem } from "../Layout"
 
-const STEP = 12
+const STEP = 20
 const NUBMER_OF_ITEMS = 4
 const NUMBER_OF_SECTIONS = 24
 const NUMBER_OF_CHAPTERS = 7
@@ -45,7 +45,9 @@ interface Props {
 	onMouseUpOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onMouseDownOnItem?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
 	onMouseDownOnItemBottomEdge?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
+	onClickOnItem?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
 	currentItem?: Item | undefined
+	selectedItem?: Item | undefined
 	data: Data
 	operation?: Operation,
 	zIndex: number
@@ -87,6 +89,7 @@ export const Provider = ({
 	const [data, setData] = useState<Data>(initialData)
 	const [ref, size] = useSize<HTMLDivElement>()
 	const [currentItem, setCurrentItem] = useState<Item | undefined>()
+	const [selectedItem, setSelectedItem] = useState<Item | undefined>()
 
 	useEffect(() => {
 
@@ -149,6 +152,7 @@ export const Provider = ({
 				}
 			})
 		}
+		setSelectedItem(undefined)
 	}
 
 	const onMouseMoveOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -274,6 +278,7 @@ export const Provider = ({
 				after: item
 			}
 		})
+		setSelectedItem(item)
 	}
 
 	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: CardItem) => {
@@ -299,6 +304,20 @@ export const Provider = ({
 		})
 	}
 
+	const onClickOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: CardItem) => {
+		event.stopPropagation()
+		if (operation?.add || operation?.move) {
+			console.log("onMouseDownOnItemBottomEdge")
+			return
+		}
+		const bounds = ref.current?.getBoundingClientRect()
+		if (!bounds) return
+		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+		const indexPath = indexPathForPoint(point)
+		const item = data[cardItem.id]
+		// setSelectedItem(item)
+	}
+
 	return (
 		<Context.Provider value={{
 			zIndex,
@@ -313,7 +332,9 @@ export const Provider = ({
 			onMouseUpOnTable,
 			onMouseDownOnItem,
 			onMouseDownOnItemBottomEdge,
+			onClickOnItem,
 			currentItem,
+			selectedItem,
 			data,
 			operation,
 		}}>

@@ -1,6 +1,7 @@
 import React, { ReactElement } from "react"
-import { Provider, Data, Item } from "./Context"
+import { Provider, Data, Item } from "./Table/Context"
 import Table from "./Table"
+
 
 const Component = ({ data, onCreate, children }: { data: Data, children: ReactElement, onCreate: (item: Item, done: (item: Item) => void) => void }) => {
 

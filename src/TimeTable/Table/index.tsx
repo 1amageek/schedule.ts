@@ -1,8 +1,7 @@
 import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
-import { Item, useCardItemProvider, Context } from "./Context"
-import { CardItemProvider } from "./CardContext"
-import { useSize } from "./Geometory"
-import { useLayout } from "./Layout"
+import { useCardItemProvider, Context } from "./Context"
+import { useSize } from "../Geometory"
+import { useLayout } from "../Layout"
 
 const Component = ({ children }: { children: ReactElement }) => {
 
@@ -105,44 +104,40 @@ const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement
 			padding: 0
 		}}
 		>
-			<CardItemProvider>
-				<>
-					{
-						currentItems
-							.filter(item => item.start.chapter === chapter)
-							.map((item, index) => {
-								const newChildren = cloneElement(children, {
-									key: `${chapter}-${index}`,
-									index: items.length,
-									item: item,
-									isRequiredShadow: true
-								})
-								return (
-									<div key={`${chapter}-${index}`}>{newChildren}</div>
-								)
+			<>
+				{
+					currentItems
+						.filter(item => item.start.chapter === chapter)
+						.map((layoutAttributes, index) => {
+							const newChildren = cloneElement(children, {
+								key: `${chapter}-${index}`,
+								index: items.length,
+								layoutAttributes: layoutAttributes,
+								isActive: true
 							})
-					}
-				</>
-			</CardItemProvider>
-
-			<CardItemProvider>
-				<>
-					{
-						items
-							.filter(item => item.start.chapter === chapter)
-							.map((item, index) => {
-								const newChildren = cloneElement(children, {
-									key: `${chapter}-${index}`,
-									index: index,
-									item: item
-								})
-								return (
-									<div key={`${chapter}-${index}`}>{newChildren}</div>
-								)
+							return (
+								<div key={`${chapter}-${index}`}>{newChildren}</div>
+							)
+						})
+				}
+			</>
+			<>
+				{
+					items
+						.filter(item => item.start.chapter === chapter)
+						.map((layoutAttributes, index) => {
+							const newChildren = cloneElement(children, {
+								key: `${chapter}-${index}`,
+								index: index,
+								layoutAttributes: layoutAttributes,
+								isActive: false
 							})
-					}
-				</>
-			</CardItemProvider>
+							return (
+								<div key={`${chapter}-${index}`}>{newChildren}</div>
+							)
+						})
+				}
+			</>
 		</div>
 	)
 }

@@ -22,12 +22,11 @@ const Component = () => {
 				}}
 			>
 				<Card>
-
+					<div>haaa</div>
 				</Card>
 			</TimeTable>
 		</div>
 	)
 }
-
 
 export default Component
