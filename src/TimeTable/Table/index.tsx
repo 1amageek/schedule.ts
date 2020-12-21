@@ -1,10 +1,33 @@
-import React, { useContext, CSSProperties } from "react"
-import { Item, useCardItemProvider, Context } from "./Context"
-import Card from "./Card"
-import { useSize } from "./Geometory"
-import { useLayout } from "./Layout"
+import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
+import { useCardItemProvider, Context, Provider, ItemHandler } from "./Context"
+import { useSize } from "../Geometory"
+import { useLayout } from "../Layout"
+import Item from "../Item"
 
-const Component = () => {
+interface Props {
+	initialData: Item[]
+	idProvider: () => string
+	onCreate: ItemHandler
+	onDelete: ItemHandler
+	children: ReactElement
+}
+
+const Component = ({ initialData, idProvider, onCreate, onDelete, children }: Props) => {
+	return (
+		<Provider
+			initialData={initialData}
+			idProvider={idProvider}
+			onCreate={onCreate}
+			onDelete={onDelete}
+		>
+			<Content>
+				{children}
+			</Content>
+		</Provider>
+	)
+}
+
+const Content = ({ children }: { children: ReactElement }) => {
 
 	const {
 		cursor,
@@ -29,16 +52,22 @@ const Component = () => {
 			onMouseUp={onMouseUpOnTable}
 		>
 			{columns.map(index => {
-				return <Column
-					key={index}
-					chapter={index}
-				/>
+				return (
+					<Column
+						key={index}
+						chapter={index}
+					>
+						{children}
+					</Column>
+				)
 			})}
 		</div>
 	)
 }
 
-const Column = ({ chapter }: { chapter: number }) => {
+
+
+const Column = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 
 	const { zIndex } = useContext(Context)
 	const [ref, size] = useSize<HTMLDivElement>()
@@ -60,14 +89,16 @@ const Column = ({ chapter }: { chapter: number }) => {
 				zIndex: zIndex
 			}}
 			>
-				<Canvas chapter={chapter} />
+				<Canvas chapter={chapter}>
+					{children}
+				</Canvas>
 			</div>
 			<Background chapter={chapter} />
 		</div>
 	)
 }
 
-const Canvas = ({ chapter }: { chapter: number }) => {
+const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 	const {
 		currentItem,
 		numberOfChapters,
@@ -76,8 +107,8 @@ const Canvas = ({ chapter }: { chapter: number }) => {
 		data
 	} = useContext(Context)
 
-	const _items = useCardItemProvider(data)
-	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : [])
+	const _items = useCardItemProvider(data).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
+	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : []).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
 
 	const items = useLayout(_items, {
 		numberOfChapters,
@@ -99,20 +130,40 @@ const Canvas = ({ chapter }: { chapter: number }) => {
 			padding: 0
 		}}
 		>
-			{
-				currentItems
-					.filter(item => item.start.chapter === chapter)
-					.map((item, index) => {
-						return <Card key={`${chapter}-${index}`} index={items.length} item={item} isRequiredShadow />
-					})
-			}
-			{
-				items
-					.filter(item => item.start.chapter === chapter)
-					.map((item, index) => {
-						return <Card key={`${chapter}-${index}`} index={index} item={item} />
-					})
-			}
+			<>
+				{
+					currentItems
+						.filter(item => item.start.chapter === chapter)
+						.map((layoutAttributes, index) => {
+							const newChildren = cloneElement(children, {
+								key: `${chapter}-${index}`,
+								index: items.length,
+								layoutAttributes: layoutAttributes,
+								isDragging: true
+							})
+							return (
+								<div key={`${chapter}-${index}`}>{newChildren}</div>
+							)
+						})
+				}
+			</>
+			<>
+				{
+					items
+						.filter(item => item.start.chapter === chapter)
+						.map((layoutAttributes, index) => {
+							const newChildren = cloneElement(children, {
+								key: `${chapter}-${index}`,
+								index: index,
+								layoutAttributes: layoutAttributes,
+								isDragging: false
+							})
+							return (
+								<div key={`${chapter}-${index}`}>{newChildren}</div>
+							)
+						})
+				}
+			</>
 		</div>
 	)
 }

@@ -1,15 +1,9 @@
-import IndexPath, { substract, isGreaterThan, isLessThan, isGreaterThanOrEqualTo, isLessThanOrEqualTo } from "./IndexPath"
+import IndexPath, { IndexRangeable, substract, isGreaterThan, isLessThan, isGreaterThanOrEqualTo, isLessThanOrEqualTo } from "../Protocol/IndexPath"
+import Identifiable from "../Protocol/Identifiable"
 
-interface DistanceComparable {
-	start: IndexPath
-	end: IndexPath
+export interface CardItem extends IndexRangeable, Identifiable {
+	index: number
 }
-
-interface Identifiable {
-	id: number
-}
-
-export interface CardItem extends DistanceComparable, Identifiable { }
 
 export interface LayoutAttributes extends CardItem {
 	position: {
@@ -21,7 +15,9 @@ export interface LayoutAttributes extends CardItem {
 	end: IndexPath
 }
 
-class LayoutNode implements DistanceComparable {
+const LAYOUT_SAFETY = 100
+
+class LayoutNode implements IndexRangeable {
 
 	id: string
 	parents: LayoutNode[] = []
@@ -68,7 +64,7 @@ class LayoutNode implements DistanceComparable {
 
 }
 
-const isOverlap = <T extends DistanceComparable, U extends DistanceComparable>(l: T, r: U): boolean => {
+const isOverlap = <T extends IndexRangeable, U extends IndexRangeable>(l: T, r: U): boolean => {
 	return !(isLessThanOrEqualTo(l.end, r.start) || isGreaterThanOrEqualTo(l.start, r.end))
 }
 
@@ -98,12 +94,11 @@ export const useLayout = (cardItems: CardItem[], max: { numberOfChapters: number
 			}
 		}
 		currentColumn += 1
-	} while (cardItems.length !== layoutNodes.length)
-
+	} while (cardItems.length !== layoutNodes.length && currentColumn < LAYOUT_SAFETY)
 
 	return layoutNodes.map(layoutNode => {
 		return {
-			id: Number(layoutNode.id),
+			id: layoutNode.id,
 			position: {
 				column: layoutNode.numberOfColumns,
 				start: layoutNode.startColumn,

@@ -1,29 +1,18 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
-import { useSize, Size, Point } from "./Geometory"
-import { CardItem } from "./Layout"
+import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../../Protocol/IndexPath"
+import { useSize, Size, Point } from "../Geometory"
+import { CardItem } from "../Layout"
+import Item from "../Item"
 
-const STEP = 12
+const STEP = 20
 const NUBMER_OF_ITEMS = 4
 const NUMBER_OF_SECTIONS = 24
 const NUMBER_OF_CHAPTERS = 7
 const ZINDEX = 100
 
-export interface Item {
-	start: IndexPath
-	end: IndexPath
-}
-
-export type Data = Item[]
-
-export interface IndexPath {
-	chapter: number
-	section: number
-	item: number
-}
-
 interface Change {
-	before: Item
-	after: Item
+	before: IndexRangeable
+	after?: IndexRangeable
 }
 
 interface Event {
@@ -32,36 +21,11 @@ interface Event {
 }
 
 interface Operation {
+	id: string
 	event: Event
-	add?: Item
+	add?: IndexRangeable
 	move?: Change
 	update?: Change
-}
-
-const flatIndexPath = (indexPath: IndexPath) => {
-	const { chapter, section, item } = indexPath
-	const c = `${chapter}`.padStart(2, "0")
-	const s = `${section}`.padStart(2, "0")
-	const i = `${item}`.padStart(2, "0")
-	return Number(c + s + i)
-}
-
-const isEqualTo = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum === rnum
-}
-
-const isLessThan = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum < rnum
-}
-
-const isGreaterThan = (l: IndexPath, r: IndexPath) => {
-	const lnum = flatIndexPath(l)
-	const rnum = flatIndexPath(r)
-	return lnum > rnum
 }
 
 interface Props {
@@ -77,10 +41,13 @@ interface Props {
 	onMouseDownOnItem?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
 	onMouseDownOnItemBottomEdge?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
 	currentItem?: Item | undefined
-	data: Data
+	selectedItems: Item[]
+	data: Item[]
 	operation?: Operation,
 	zIndex: number
 }
+
+export type ItemHandler = (item: Item, done: (item: Item | null) => void) => void
 
 export const Context = createContext<Props>({
 	size: { width: 0, height: 0 },
@@ -89,12 +56,15 @@ export const Context = createContext<Props>({
 	numberOfChapters: NUMBER_OF_CHAPTERS,
 	numberOfSections: NUMBER_OF_SECTIONS,
 	numberOfItems: NUBMER_OF_ITEMS,
+	selectedItems: [],
 	data: []
 })
 
 export const Provider = ({
+	idProvider,
 	initialData,
 	onCreate,
+	onDelete,
 	zIndex = ZINDEX,
 	step = STEP,
 	numberOfItems = NUBMER_OF_ITEMS,
@@ -102,8 +72,10 @@ export const Provider = ({
 	numberOfChapters = NUMBER_OF_CHAPTERS,
 	children
 }: {
-	initialData: Data,
-	onCreate: (item: Item, done: (item: Item) => void) => void,
+	idProvider: () => string,
+	initialData: Item[],
+	onCreate: ItemHandler,
+	onDelete: ItemHandler,
 	zIndex?: number,
 	step?: number,
 	numberOfItems?: number,
@@ -115,31 +87,50 @@ export const Provider = ({
 
 	const [cursor, setCursor] = useState<string>()
 	const [operation, setOperation] = useState<Operation | undefined>()
-	const [data, setData] = useState<Data>(initialData)
+	const [data, setData] = useState<Item[]>(initialData)
 	const [ref, size] = useSize<HTMLDivElement>()
 	const [currentItem, setCurrentItem] = useState<Item | undefined>()
+	const [selectedItems, setSelectedItems] = useState<Item[]>([])
+
+	console.log(currentItem)
+
+	window.document.onkeydown = (event: KeyboardEvent) => {
+		if (event.key === "Backspace") {
+			const selectedIDs = selectedItems.map(item => item.id)
+			const _data = data.filter(item => !selectedIDs.includes(item.id))
+			setData(_data)
+			setSelectedItems([])
+		}
+	}
 
 	useEffect(() => {
-
 		if (operation?.add) {
 			if (!isEqualTo(operation.add.start, operation.add.end)) {
 				setCursor("move")
-				setCurrentItem(operation.add)
+				setCurrentItem({
+					id: operation.id,
+					...operation.add
+				})
 			} else {
 				setCursor(undefined)
 				setCurrentItem(undefined)
 			}
-		} else if (operation?.move) {
+		} else if (operation?.move?.after) {
 			setCursor("move")
-			setCurrentItem(operation.move.after)
-		} else if (operation?.update) {
+			setCurrentItem({
+				id: operation.id,
+				...operation.move.after
+			})
+		} else if (operation?.update?.after) {
 			setCursor("row-resize")
-			setCurrentItem(operation.update.after)
+			setCurrentItem({
+				id: operation.id,
+				...operation.update.after
+			})
 		} else {
 			setCursor(undefined)
 			setCurrentItem(undefined)
 		}
-
 	}, [JSON.stringify(operation)])
 
 
@@ -151,25 +142,15 @@ export const Provider = ({
 		return { chapter, section, item }
 	}
 
-	const sum = (l: IndexPath, r: IndexPath, max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
-		const c = numberOfSections * numberOfItems
-		const s = numberOfItems
-		const lnum = l.chapter * c + l.section * s + l.item
-		const rnum = r.chapter * c + r.section * s + r.item
-		const sum = lnum + rnum
-		const chapter = Math.floor(sum / c)
-		const section = Math.floor((sum % c) / s)
-		const item = ((sum % c) % s)
-		return { chapter, section, item }
-	}
-
 	const onMouseDownOnTable = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		event.stopPropagation()
 		const bounds = ref.current?.getBoundingClientRect()
 		if (bounds) {
 			const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 			const indexPath = indexPathForPoint(point)
+			const id = idProvider()
 			setOperation({
+				id,
 				event: {
 					initial: indexPath,
 					current: indexPath
@@ -203,6 +184,7 @@ export const Provider = ({
 				}
 			}
 			setOperation({
+				id: operation.id,
 				event: {
 					initial: operation.event.initial,
 					current: indexPath
@@ -212,10 +194,7 @@ export const Provider = ({
 		}
 
 		if (operation?.move) {
-			const chapter = operation.event.current.chapter - operation.event.initial.chapter
-			const section = operation.event.current.section - operation.event.initial.section
-			const item = operation.event.current.item - operation.event.initial.item
-			const diffIndexPath: IndexPath = { chapter, section, item }
+			const diffIndexPath: IndexPath = substract(indexPath, operation.event.initial, { numberOfChapters, numberOfSections, numberOfItems })
 			const start = sum(operation.move.before.start, diffIndexPath, { numberOfChapters, numberOfSections, numberOfItems })
 			const end = sum(operation.move.before.end, diffIndexPath, { numberOfChapters, numberOfSections, numberOfItems })
 			const move: Change = {
@@ -225,6 +204,7 @@ export const Provider = ({
 				}
 			}
 			setOperation({
+				id: operation.id,
 				event: {
 					initial: operation.event.initial,
 					current: indexPath
@@ -255,6 +235,7 @@ export const Provider = ({
 				}
 			}
 			setOperation({
+				id: operation.id,
 				event: {
 					initial: operation.event.initial,
 					current: indexPath
@@ -268,23 +249,46 @@ export const Provider = ({
 		event.stopPropagation()
 		if (operation?.add) {
 			if (!isEqualTo(operation.add.start, operation.add.end)) {
-				setData([...data, operation.add])
+				const item = {
+					id: operation.id,
+					...operation.add
+				}
+				setSelectedItems([item])
+				onCreate(item, (item) => {
+					if (item) {
+						setData([...data, item])
+					} else {
+						setSelectedItems([])
+					}
+				})
+			} else {
+				setSelectedItems([])
 			}
 		}
-		if (operation?.move) {
-			const index = data.indexOf(operation.move.before)
+		if (operation?.move?.after) {
+			const index = data.map(item => item.id).indexOf(operation.id)
 			data.splice(index, 1)
-			setData([...data, operation.move.after])
+			const item = {
+				id: operation.id,
+				...operation.move.after
+			}
+			setData([...data, item])
+			setSelectedItems([item])
 		}
-		if (operation?.update) {
-			const index = data.indexOf(operation.update.before)
+		if (operation?.update?.after) {
+			const index = data.map(item => item.id).indexOf(operation.id)
 			data.splice(index, 1)
-			setData([...data, operation.update.after])
+			const item = {
+				id: operation.id,
+				...operation.update.after
+			}
+			setData([...data, item])
+			setSelectedItems([item])
 		}
-		setOperation(undefined)
+		if (operation) setOperation(undefined)
 	}
 
-	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: CardItem) => {
+	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: Item) => {
 		event.stopPropagation()
 		if (operation?.add || operation?.update) {
 			console.log("onMouseDownOnItem")
@@ -294,20 +298,22 @@ export const Provider = ({
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 		const indexPath = indexPathForPoint(point)
-		const item = data[cardItem.id]
+		const item = data.find(item => item.id === cardItem.id)
+		if (!item) return
 		setOperation({
+			id: cardItem.id,
 			event: {
 				initial: indexPath,
 				current: indexPath
 			},
 			move: {
-				before: item,
-				after: item
+				before: item
 			}
 		})
+		setSelectedItems([cardItem])
 	}
 
-	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: CardItem) => {
+	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: Item) => {
 		event.stopPropagation()
 		if (operation?.add || operation?.move) {
 			console.log("onMouseDownOnItemBottomEdge")
@@ -317,8 +323,10 @@ export const Provider = ({
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 		const indexPath = indexPathForPoint(point)
-		const item = data[cardItem.id]
+		const item = data.find(item => item.id === cardItem.id)
+		if (!item) return
 		setOperation({
+			id: cardItem.id,
 			event: {
 				initial: indexPath,
 				current: indexPath
@@ -345,6 +353,7 @@ export const Provider = ({
 			onMouseDownOnItem,
 			onMouseDownOnItemBottomEdge,
 			currentItem,
+			selectedItems,
 			data,
 			operation,
 		}}>
@@ -371,14 +380,15 @@ export const useCardItemProvider = (items: Item[]) => {
 	const cardItems: CardItem[] = []
 	const minIndexPath: IndexPath = { chapter: 0, section: 0, item: 0 }
 	const maxIndexPath: IndexPath = { chapter: numberOfChapters - 1, section: numberOfSections - 1, item: numberOfItems - 1 }
-	items.forEach((item, id) => {
+	items.forEach((item, index) => {
 		const startChapter = Math.min(Math.max(item.start.chapter, 0), numberOfChapters - 1)
 		const endChapter = Math.min(Math.max(item.end.chapter, 0), numberOfChapters - 1)
 		const start = isGreaterThan(item.start, minIndexPath) ? item.start : minIndexPath
 		const end = isLessThan(item.end, maxIndexPath) ? item.end : maxIndexPath
 		if (startChapter === endChapter) {
 			const cardItem: CardItem = {
-				id,
+				id: item.id,
+				index,
 				start,
 				end
 			}
@@ -390,7 +400,8 @@ export const useCardItemProvider = (items: Item[]) => {
 				const chapter = startChapter + index
 				if (chapter === startChapter) {
 					cardItems.push({
-						id,
+						id: item.id,
+						index,
 						start,
 						end: {
 							chapter: startChapter,
@@ -402,7 +413,8 @@ export const useCardItemProvider = (items: Item[]) => {
 				}
 				if (chapter === endChapter) {
 					cardItems.push({
-						id,
+						id: item.id,
+						index,
 						start: {
 							chapter: endChapter,
 							section: 0,
@@ -413,7 +425,8 @@ export const useCardItemProvider = (items: Item[]) => {
 					continue
 				}
 				cardItems.push({
-					id,
+					id: item.id,
+					index,
 					start: {
 						chapter,
 						section: 0,
@@ -429,29 +442,4 @@ export const useCardItemProvider = (items: Item[]) => {
 		}
 	})
 	return cardItems
-}
-
-export const useCardPositionProvider = (cardItems: CardItem[]) => {
-
-	const overlapping: CardItem[] = []
-
-	cardItems.forEach((cardItem, index) => {
-		cardItems
-			.filter(item => item.id !== cardItem.id)
-			.filter(item => !overlapping.includes(item))
-			.forEach(item => {
-				if (cardItem.start < item.start && item.end < cardItem.end) {
-
-				}
-
-				if (cardItem.start < item.start && item.start < cardItem.end) {
-
-				}
-
-				if (cardItem.start < item.end && item.end < cardItem.end) {
-
-				}
-			})
-	})
-
 }
