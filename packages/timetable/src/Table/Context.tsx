@@ -1,8 +1,8 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
-import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../../Protocol/IndexPath"
-import { useSize, Size, Point } from "../Geometory"
+import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../util/IndexPath"
+import { useSize, Size, Point } from "@1amageek/geometory"
 import { CardItem } from "../Layout"
-import Item from "../Item"
+import { Item } from "../Item"
 
 const STEP = 20
 const NUBMER_OF_ITEMS = 4

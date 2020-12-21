@@ -1,0 +1,32 @@
+{
+	"name": "@1amageek/timetable",
+	"version": "1.0.0",
+	"description": "Timetable UI components in React",
+	"main": "lib/index.js",
+	"scripts": {
+		"build": "./node_modules/.bin/tsc -d",
+		"prepare": "npm run build",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/1amageek/schedule.ts.git"
+	},
+	"keywords": [
+		"react",
+		"schedule",
+		"timetable"
+	],
+	"author": "1amageek",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/1amageek/schedule.ts/issues"
+	},
+	"homepage": "https://github.com/1amageek/schedule.ts#readme",
+	"dependencies": {
+		"@1amageek/geometory": "^1.0.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.1.3"
+	}
+}

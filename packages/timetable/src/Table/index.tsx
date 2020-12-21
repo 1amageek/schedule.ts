@@ -1,8 +1,8 @@
 import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
 import { useCardItemProvider, Context, Provider, ItemHandler } from "./Context"
-import { useSize } from "../Geometory"
+import { useSize } from "@1amageek/geometory"
 import { useLayout } from "../Layout"
-import Item from "../Item"
+import { Item } from "../Item"
 
 interface Props {
 	initialData: Item[]
@@ -12,7 +12,7 @@ interface Props {
 	children: ReactElement
 }
 
-const Component = ({ initialData, idProvider, onCreate, onDelete, children }: Props) => {
+export const Table = ({ initialData, idProvider, onCreate, onDelete, children }: Props) => {
 	return (
 		<Provider
 			initialData={initialData}
@@ -64,8 +64,6 @@ const Content = ({ children }: { children: ReactElement }) => {
 		</div>
 	)
 }
-
-
 
 const Column = ({ chapter, children }: { chapter: number, children: ReactElement }) => {
 
@@ -226,5 +224,3 @@ const Row = ({ height, isRequiredBorders = [] }: { height: number, isRequiredBor
 		</div>
 	)
 }
-
-export default Component

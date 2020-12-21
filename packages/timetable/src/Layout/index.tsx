@@ -1,5 +1,5 @@
-import IndexPath, { IndexRangeable, substract, isGreaterThan, isLessThan, isGreaterThanOrEqualTo, isLessThanOrEqualTo } from "../Protocol/IndexPath"
-import Identifiable from "../Protocol/Identifiable"
+import IndexPath, { IndexRangeable, substract, isGreaterThan, isLessThan, isGreaterThanOrEqualTo, isLessThanOrEqualTo } from "../util/IndexPath"
+import Identifiable from "../util/Identifiable"
 
 export interface CardItem extends IndexRangeable, Identifiable {
 	index: number

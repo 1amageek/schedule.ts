@@ -1,8 +1,8 @@
 import React, { useContext, CSSProperties, ReactElement } from "react"
-import Item from "../Item"
+import { Item } from "../Item"
 import { Context } from "../Table/Context"
 
-interface CardItemState {
+export interface CardItemState {
 	isSelected: boolean
 	isUpdated: boolean
 	isDragging: boolean
@@ -48,7 +48,7 @@ const DefaultStyle = (state: CardItemState): CSSProperties => {
 	return defaultStyle
 }
 
-const Component = (props: Props) => {
+export const Card = (props: Props) => {
 
 	const {
 		step,
@@ -127,5 +127,3 @@ const Component = (props: Props) => {
 		</div>
 	)
 }
-
-export default Component

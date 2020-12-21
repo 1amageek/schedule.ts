@@ -1,9 +1,9 @@
 import React from "react"
-import { Table, Card } from "./TimeTable"
+import { Card, Table } from "@1amageek/timetable"
 import { v4 as uuidv4 } from "uuid"
-import ScheduleItem from "./ScheduleItem"
 
 const Component = () => {
+
 	return (
 		<div
 			style={{
@@ -35,7 +35,7 @@ const Component = () => {
 								style={{
 									padding: "8px"
 								}}
-							>{title}</div>
+							>{data.id}</div>
 						)
 					}}
 				</Card>
@@ -43,29 +43,5 @@ const Component = () => {
 		</div>
 	)
 }
-
-// const Componet = () => {
-// 	return (
-// 		<Content>
-// 			{() => {
-// 				return (
-// 					<div></div>
-// 				)
-// 			}}
-// 		</Content>
-
-// 	)
-// }
-
-// type DataComponent = () => React.ReactElement
-
-// const Content = ({ children }: { children: DataComponent }) => {
-// 	const cntent = children()
-// 	return (
-// 		<>
-// 			{ cntent}
-// 		</>
-// 	)
-// }
 
 export default Component
