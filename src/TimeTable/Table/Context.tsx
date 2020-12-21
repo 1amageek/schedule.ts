@@ -1,5 +1,5 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
-import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum } from "../../Protocol/IndexPath"
+import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../../Protocol/IndexPath"
 import { useSize, Size, Point } from "../Geometory"
 import { CardItem } from "../Layout"
 import Item from "../Item"
@@ -91,6 +91,8 @@ export const Provider = ({
 	const [ref, size] = useSize<HTMLDivElement>()
 	const [currentItem, setCurrentItem] = useState<Item | undefined>()
 	const [selectedItems, setSelectedItems] = useState<Item[]>([])
+
+	console.log(currentItem)
 
 	window.document.onkeydown = (event: KeyboardEvent) => {
 		if (event.key === "Backspace") {
@@ -192,10 +194,7 @@ export const Provider = ({
 		}
 
 		if (operation?.move) {
-			const chapter = operation.event.current.chapter - operation.event.initial.chapter
-			const section = operation.event.current.section - operation.event.initial.section
-			const item = operation.event.current.item - operation.event.initial.item
-			const diffIndexPath: IndexPath = { chapter, section, item }
+			const diffIndexPath: IndexPath = substract(indexPath, operation.event.initial, { numberOfChapters, numberOfSections, numberOfItems })
 			const start = sum(operation.move.before.start, diffIndexPath, { numberOfChapters, numberOfSections, numberOfItems })
 			const end = sum(operation.move.before.end, diffIndexPath, { numberOfChapters, numberOfSections, numberOfItems })
 			const move: Change = {
@@ -388,8 +387,10 @@ export const useCardItemProvider = (items: Item[]) => {
 		const end = isLessThan(item.end, maxIndexPath) ? item.end : maxIndexPath
 		if (startChapter === endChapter) {
 			const cardItem: CardItem = {
+				id: item.id,
 				index,
-				...item
+				start,
+				end
 			}
 			cardItems.push(cardItem)
 		} else {
