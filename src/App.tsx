@@ -29,7 +29,6 @@ const Component = () => {
 			>
 				<Card>
 					{data => {
-						const title = ""
 						return (
 							<div
 								style={{
