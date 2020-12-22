@@ -1,8 +1,8 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
 import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../util/IndexPath"
 import { useSize, Size, Point } from "@1amageek/geometory"
-import { CardItem } from "../Layout"
-import { Item } from "../Item"
+import { ItemCell } from "../Layout"
+import { Data } from "../Data"
 
 const STEP = 20
 const NUBMER_OF_ITEMS = 4
@@ -38,16 +38,16 @@ interface Props {
 	onMouseDownOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onMouseMoveOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 	onMouseUpOnTable?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
-	onMouseDownOnItem?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
-	onMouseDownOnItemBottomEdge?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: CardItem) => void
-	currentItem?: Item | undefined
-	selectedItems: Item[]
-	data: Item[]
+	onMouseDownOnItem?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: ItemCell) => void
+	onMouseDownOnItemBottomEdge?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, item: ItemCell) => void
+	currentItem?: Data | undefined
+	selectedItems: Data[]
+	data: Data[]
 	operation?: Operation,
 	zIndex: number
 }
 
-export type ItemHandler = (item: Item, done: (item: Item | null) => void) => void
+export type ItemHandler = (item: Data, done: (item: Data | null) => void) => void
 
 export const Context = createContext<Props>({
 	size: { width: 0, height: 0 },
@@ -73,7 +73,7 @@ export const Provider = ({
 	children
 }: {
 	idProvider: () => string,
-	initialData: Item[],
+	initialData: Data[],
 	onCreate: ItemHandler,
 	onDelete: ItemHandler,
 	zIndex?: number,
@@ -87,10 +87,10 @@ export const Provider = ({
 
 	const [cursor, setCursor] = useState<string>()
 	const [operation, setOperation] = useState<Operation | undefined>()
-	const [data, setData] = useState<Item[]>(initialData)
+	const [data, setData] = useState<Data[]>(initialData)
 	const [ref, size] = useSize<HTMLDivElement>()
-	const [currentItem, setCurrentItem] = useState<Item | undefined>()
-	const [selectedItems, setSelectedItems] = useState<Item[]>([])
+	const [currentItem, setCurrentItem] = useState<Data | undefined>()
+	const [selectedItems, setSelectedItems] = useState<Data[]>([])
 
 	console.log(currentItem)
 
@@ -288,7 +288,7 @@ export const Provider = ({
 		if (operation) setOperation(undefined)
 	}
 
-	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: Item) => {
+	const onMouseDownOnItem = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, itemCell: Data) => {
 		event.stopPropagation()
 		if (operation?.add || operation?.update) {
 			console.log("onMouseDownOnItem")
@@ -298,10 +298,10 @@ export const Provider = ({
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 		const indexPath = indexPathForPoint(point)
-		const item = data.find(item => item.id === cardItem.id)
+		const item = data.find(item => item.id === itemCell.id)
 		if (!item) return
 		setOperation({
-			id: cardItem.id,
+			id: itemCell.id,
 			event: {
 				initial: indexPath,
 				current: indexPath
@@ -310,10 +310,10 @@ export const Provider = ({
 				before: item
 			}
 		})
-		setSelectedItems([cardItem])
+		setSelectedItems([itemCell])
 	}
 
-	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, cardItem: Item) => {
+	const onMouseDownOnItemBottomEdge = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, itemCell: Data) => {
 		event.stopPropagation()
 		if (operation?.add || operation?.move) {
 			console.log("onMouseDownOnItemBottomEdge")
@@ -323,10 +323,10 @@ export const Provider = ({
 		if (!bounds) return
 		const point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 		const indexPath = indexPathForPoint(point)
-		const item = data.find(item => item.id === cardItem.id)
+		const item = data.find(item => item.id === itemCell.id)
 		if (!item) return
 		setOperation({
-			id: cardItem.id,
+			id: itemCell.id,
 			event: {
 				initial: indexPath,
 				current: indexPath
@@ -371,13 +371,13 @@ export const Provider = ({
 	)
 }
 
-export const useCardItemProvider = (items: Item[]) => {
+export const useItemCellProvider = (items: Data[]) => {
 	const {
 		numberOfChapters,
 		numberOfSections,
 		numberOfItems
 	} = useContext(Context)
-	const cardItems: CardItem[] = []
+	const itemCells: ItemCell[] = []
 	const minIndexPath: IndexPath = { chapter: 0, section: 0, item: 0 }
 	const maxIndexPath: IndexPath = { chapter: numberOfChapters - 1, section: numberOfSections - 1, item: numberOfItems - 1 }
 	items.forEach((item, index) => {
@@ -386,20 +386,20 @@ export const useCardItemProvider = (items: Item[]) => {
 		const start = isGreaterThan(item.start, minIndexPath) ? item.start : minIndexPath
 		const end = isLessThan(item.end, maxIndexPath) ? item.end : maxIndexPath
 		if (startChapter === endChapter) {
-			const cardItem: CardItem = {
+			const itemCell: ItemCell = {
 				id: item.id,
 				index,
 				start,
 				end
 			}
-			cardItems.push(cardItem)
+			itemCells.push(itemCell)
 		} else {
 			const chapterDiff = endChapter - startChapter + 1
 			const diff = [...new Array(chapterDiff).keys()]
 			for (const index of diff) {
 				const chapter = startChapter + index
 				if (chapter === startChapter) {
-					cardItems.push({
+					itemCells.push({
 						id: item.id,
 						index,
 						start,
@@ -412,7 +412,7 @@ export const useCardItemProvider = (items: Item[]) => {
 					continue
 				}
 				if (chapter === endChapter) {
-					cardItems.push({
+					itemCells.push({
 						id: item.id,
 						index,
 						start: {
@@ -424,7 +424,7 @@ export const useCardItemProvider = (items: Item[]) => {
 					})
 					continue
 				}
-				cardItems.push({
+				itemCells.push({
 					id: item.id,
 					index,
 					start: {
@@ -441,5 +441,5 @@ export const useCardItemProvider = (items: Item[]) => {
 			}
 		}
 	})
-	return cardItems
+	return itemCells
 }

@@ -1,11 +1,11 @@
 import IndexPath, { IndexRangeable, substract, isGreaterThan, isLessThan, isGreaterThanOrEqualTo, isLessThanOrEqualTo } from "../util/IndexPath"
 import Identifiable from "../util/Identifiable"
 
-export interface CardItem extends IndexRangeable, Identifiable {
+export interface ItemCell extends IndexRangeable, Identifiable {
 	index: number
 }
 
-export interface LayoutAttributes extends CardItem {
+export interface LayoutAttributes extends ItemCell {
 	position: {
 		column: number,
 		start: number,
@@ -28,8 +28,8 @@ class LayoutNode implements IndexRangeable {
 	start: IndexPath
 	end: IndexPath
 
-	static fromCardItem(cardItem: CardItem, numberOfColumns: number) {
-		return new LayoutNode(`${cardItem.id}`, cardItem.start, cardItem.end, numberOfColumns)
+	static fromItemCell(itemCell: ItemCell, numberOfColumns: number) {
+		return new LayoutNode(`${itemCell.id}`, itemCell.start, itemCell.end, numberOfColumns)
 	}
 
 	constructor(id: string, start: IndexPath, end: IndexPath, numberOfColumns: number) {
@@ -68,17 +68,17 @@ const isOverlap = <T extends IndexRangeable, U extends IndexRangeable>(l: T, r: 
 	return !(isLessThanOrEqualTo(l.end, r.start) || isGreaterThanOrEqualTo(l.start, r.end))
 }
 
-export const useLayout = (cardItems: CardItem[], max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
+export const useLayout = (itemCells: ItemCell[], max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
 
-	const sortedCardItems: CardItem[] = sortForLayout(cardItems, max)
+	const sortedItemCells: ItemCell[] = sortForLayout(itemCells, max)
 	const layoutNodes: LayoutNode[] = []
 
 	let currentColumn = 1
 
 	do {
-		const targetCardItems = sortedCardItems.filter(cardItem => !layoutNodes.map(layoutNode => layoutNode.id).includes(`${cardItem.id}`))
-		for (const cardItem of targetCardItems) {
-			const targetLayoutNode: LayoutNode = LayoutNode.fromCardItem(cardItem, currentColumn)
+		const targetItemCells = sortedItemCells.filter(itemCell => !layoutNodes.map(layoutNode => layoutNode.id).includes(`${itemCell.id}`))
+		for (const itemCell of targetItemCells) {
+			const targetLayoutNode: LayoutNode = LayoutNode.fromItemCell(itemCell, currentColumn)
 			const currentPositionOverlapped: LayoutNode[] = layoutNodes
 				.filter(layoutNode => layoutNode.startColumn === (currentColumn - 1))
 				.filter(layoutNode => isOverlap(layoutNode, targetLayoutNode))
@@ -94,7 +94,7 @@ export const useLayout = (cardItems: CardItem[], max: { numberOfChapters: number
 			}
 		}
 		currentColumn += 1
-	} while (cardItems.length !== layoutNodes.length && currentColumn < LAYOUT_SAFETY)
+	} while (itemCells.length !== layoutNodes.length && currentColumn < LAYOUT_SAFETY)
 
 	return layoutNodes.map(layoutNode => {
 		return {
@@ -110,8 +110,8 @@ export const useLayout = (cardItems: CardItem[], max: { numberOfChapters: number
 	}) as LayoutAttributes[]
 }
 
-const sortForLayout = (cardItems: CardItem[], max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
-	return cardItems
+const sortForLayout = (itemCells: ItemCell[], max: { numberOfChapters: number, numberOfSections: number, numberOfItems: number }) => {
+	return itemCells
 		.sort((l, r) => {
 			const lLength: IndexPath = substract(l.end, l.start, max)
 			const rLength: IndexPath = substract(r.end, r.start, max)

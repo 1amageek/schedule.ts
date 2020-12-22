@@ -1,11 +1,11 @@
 import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
-import { useCardItemProvider, Context, Provider, ItemHandler } from "./Context"
+import { useItemCellProvider, Context, Provider, ItemHandler } from "./Context"
 import { useSize } from "@1amageek/geometory"
 import { useLayout } from "../Layout"
-import { Item } from "../Item"
+import { Data } from "../Data"
 
 interface Props {
-	initialData: Item[]
+	initialData: Data[]
 	idProvider: () => string
 	onCreate: ItemHandler
 	onDelete: ItemHandler
@@ -105,8 +105,8 @@ const Canvas = ({ chapter, children }: { chapter: number, children: ReactElement
 		data
 	} = useContext(Context)
 
-	const _items = useCardItemProvider(data).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
-	const _currentItems = useCardItemProvider(currentItem ? [currentItem] : []).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
+	const _items = useItemCellProvider(data).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
+	const _currentItems = useItemCellProvider(currentItem ? [currentItem] : []).filter(item => item.start.chapter === chapter && item.end.chapter === chapter)
 
 	const items = useLayout(_items, {
 		numberOfChapters,
