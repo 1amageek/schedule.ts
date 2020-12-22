@@ -1,5 +1,5 @@
 import React, { useContext, CSSProperties, ReactElement, cloneElement } from "react"
-import { useItemCellProvider, Context, Provider, ItemHandler } from "./Context"
+import { useItemCellProvider, Context, Provider, ItemWillOperationHandler, ItemDidOperationHandler } from "./Context"
 import { useSize } from "@1amageek/geometory"
 import { useLayout } from "../Layout"
 import { Data } from "../Data"
@@ -7,18 +7,22 @@ import { Data } from "../Data"
 interface Props {
 	initialData: Data[]
 	idProvider: () => string
-	onCreate: ItemHandler
-	onDelete: ItemHandler
+	willAdd: ItemWillOperationHandler
+	didAdd: ItemDidOperationHandler
+	willDelete: ItemWillOperationHandler
+	didDelete: ItemDidOperationHandler
 	children: ReactElement
 }
 
-export const Table = ({ initialData, idProvider, onCreate, onDelete, children }: Props) => {
+export const Table = ({ initialData, idProvider, willAdd, didAdd, willDelete, didDelete, children }: Props) => {
 	return (
 		<Provider
 			initialData={initialData}
 			idProvider={idProvider}
-			onCreate={onCreate}
-			onDelete={onDelete}
+			willAdd={willAdd}
+			didAdd={didAdd}
+			willDelete={willDelete}
+			didDelete={didDelete}
 		>
 			<Content>
 				{children}

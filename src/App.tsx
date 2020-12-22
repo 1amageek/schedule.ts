@@ -1,5 +1,5 @@
 import React from "react"
-import { Card, Table } from "@1amageek/timetable"
+import { Item, Table } from "@1amageek/timetable"
 import { v4 as uuidv4 } from "uuid"
 
 const Component = () => {
@@ -18,26 +18,36 @@ const Component = () => {
 			<Table
 				initialData={[]}
 				idProvider={uuidv4}
-				onCreate={(item, done) => {
+				willAdd={(item, done) => {
 					alert("save?")
 					done(item)
 				}}
-				onDelete={(item, done) => {
+				didAdd={(item) => {
+					console.log("add", item.id)
+				}}
+				willDelete={(item, done) => {
 					alert("delete?")
 					done(item)
 				}}
+				didDelete={(item) => {
+					console.log("delete", item.id)
+				}}
 			>
-				<Card>
+				<Item>
 					{data => {
 						return (
 							<div
 								style={{
-									padding: "8px"
+									padding: "8px",
+									// background: "rgba(0,200,255,1)",
+									height: "100%",
+									width: "100%",
+									boxSizing: "border-box"
 								}}
 							>{data.id}</div>
 						)
 					}}
-				</Card>
+				</Item>
 			</Table>
 		</div>
 	)

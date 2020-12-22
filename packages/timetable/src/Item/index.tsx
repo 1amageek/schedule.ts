@@ -19,7 +19,7 @@ const DefaultStyle = (state: ItemState): CSSProperties => {
 
 	const defaultStyle: CSSProperties = {
 		border: "solid 1px #FFF",
-		background: "rgba(0,119,255,0.8)",
+		background: "rgba(0,122,255,0.8)",
 		boxSizing: "border-box",
 		color: "#FFF",
 		fontSize: "12px"
@@ -28,7 +28,7 @@ const DefaultStyle = (state: ItemState): CSSProperties => {
 	if (state.isDragging) {
 		return {
 			...defaultStyle,
-			background: "rgba(0,119,255,1)",
+			background: "rgba(0,122,255,1)",
 			boxShadow: `0px 2px 25px 0px ${defaultStyle.background}`
 		}
 	}
@@ -37,12 +37,12 @@ const DefaultStyle = (state: ItemState): CSSProperties => {
 		if (state.isUpdated) {
 			return {
 				...defaultStyle,
-				background: "rgba(0,119,255,0.4)",
+				background: "rgba(0,122,255,0.4)",
 			}
 		}
 		return {
 			...defaultStyle,
-			background: "rgba(0,119,255,1)",
+			background: "rgba(0,122,255,1)",
 		}
 	}
 	return defaultStyle
@@ -59,7 +59,6 @@ export const Item = (props: Props) => {
 		zIndex,
 		cursor,
 		operation,
-		data
 	} = useContext(Context)
 
 	const { getCurrentStyle } = props

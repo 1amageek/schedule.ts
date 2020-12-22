@@ -47,7 +47,8 @@ interface Props {
 	zIndex: number
 }
 
-export type ItemHandler = (item: Data, done: (item: Data | null) => void) => void
+export type ItemWillOperationHandler = (item: Data, done: (item: Data | null) => void) => void
+export type ItemDidOperationHandler = (item: Data) => void
 
 export const Context = createContext<Props>({
 	size: { width: 0, height: 0 },
@@ -63,8 +64,10 @@ export const Context = createContext<Props>({
 export const Provider = ({
 	idProvider,
 	initialData,
-	onCreate,
-	onDelete,
+	willAdd,
+	didAdd,
+	willDelete,
+	didDelete,
 	zIndex = ZINDEX,
 	step = STEP,
 	numberOfItems = NUBMER_OF_ITEMS,
@@ -74,8 +77,10 @@ export const Provider = ({
 }: {
 	idProvider: () => string,
 	initialData: Data[],
-	onCreate: ItemHandler,
-	onDelete: ItemHandler,
+	willAdd: ItemWillOperationHandler,
+	didAdd: ItemDidOperationHandler,
+	willDelete: ItemWillOperationHandler,
+	didDelete: ItemDidOperationHandler,
 	zIndex?: number,
 	step?: number,
 	numberOfItems?: number,
@@ -92,14 +97,20 @@ export const Provider = ({
 	const [currentItem, setCurrentItem] = useState<Data | undefined>()
 	const [selectedItems, setSelectedItems] = useState<Data[]>([])
 
-	console.log(currentItem)
-
 	window.document.onkeydown = (event: KeyboardEvent) => {
 		if (event.key === "Backspace") {
-			const selectedIDs = selectedItems.map(item => item.id)
-			const _data = data.filter(item => !selectedIDs.includes(item.id))
-			setData(_data)
-			setSelectedItems([])
+			if (selectedItems.length) {
+				const item = selectedItems[0]
+				willDelete(item, (_item) => {
+					if (_item) {
+						const selectedIDs = selectedItems.map(item => item.id)
+						const _data = data.filter(item => !selectedIDs.includes(item.id))
+						setData(_data)
+						setSelectedItems([])
+						didDelete(_item)
+					}
+				})
+			}
 		}
 	}
 
@@ -254,9 +265,10 @@ export const Provider = ({
 					...operation.add
 				}
 				setSelectedItems([item])
-				onCreate(item, (item) => {
+				willAdd(item, (item) => {
 					if (item) {
 						setData([...data, item])
+						didAdd(item)
 					} else {
 						setSelectedItems([])
 					}
