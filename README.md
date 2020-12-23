@@ -1,5 +1,11 @@
 # schedule.ts
 
+## Installation
+
+```
+npm add @1amageek/timetable
+```
+
 ## Usage
 
 ```tsx
