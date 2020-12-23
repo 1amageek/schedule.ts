@@ -1,5 +1,5 @@
 import React, { useState, createContext, useEffect, useContext } from "react"
-import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract } from "../util/IndexPath"
+import IndexPath, { IndexRangeable, isLessThan, isGreaterThan, isEqualTo, sum, substract, isLessThanOrEqualTo } from "../util/IndexPath"
 import { useSize, Size, Point } from "@1amageek/geometory"
 import { ItemCell } from "../Layout"
 import { Data } from "../Data"
@@ -96,6 +96,8 @@ export const Provider = ({
 	const [ref, size] = useSize<HTMLDivElement>()
 	const [currentItem, setCurrentItem] = useState<Data | undefined>()
 	const [selectedItems, setSelectedItems] = useState<Data[]>([])
+
+	console.log(data)
 
 	window.document.onkeydown = (event: KeyboardEvent) => {
 		if (event.key === "Backspace") {
@@ -232,7 +234,7 @@ export const Provider = ({
 					end: indexPath
 				}
 			}
-			if (isLessThan(indexPath, operation.update.before.start)) {
+			if (isLessThanOrEqualTo(indexPath, operation.update.before.start)) {
 				update = {
 					before: operation.update.before,
 					after: {

@@ -22,7 +22,7 @@ const DefaultStyle = (state: ItemState): CSSProperties => {
 		background: "rgba(0,122,255,0.8)",
 		boxSizing: "border-box",
 		color: "#FFF",
-		fontSize: "12px"
+		fontSize: "11px"
 	}
 
 	if (state.isDragging) {
@@ -88,7 +88,7 @@ export const Item = (props: Props) => {
 	const _style = getStyle({
 		isSelected: selectedItems.map(item => item.id).includes(layoutAttributes.id),
 		isDragging: isDragging,
-		isUpdated: operation?.move?.after !== undefined
+		isUpdated: operation?.move?.after !== undefined || operation?.update?.after !== undefined
 	})
 
 	const style = {
